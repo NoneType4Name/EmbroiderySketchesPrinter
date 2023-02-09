@@ -1,0 +1,3 @@
+GAME_FPS = 60
+
+MAIN = 0
