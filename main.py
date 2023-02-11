@@ -1,3 +1,5 @@
+import pygame.display
+
 from functions import *
 from scene.main import SceneMain
 
@@ -41,14 +43,13 @@ class Window:
 
     def init(self, caption: str, icon_path: str, size: SIZE, flag=0, depth=0, display=0, vsync=0):
         os.environ['SDL_VIDEO_CENTERED'] = '1'
-        self.window_size = size
-        self.size = FULL_SIZE
+        self.size = size
         self.flag = flag
         self.depth = depth
         self.display = display
         self.vsync = vsync
         self.caption = caption
-        self.screen = pygame.display.set_mode(self.window_size, self.flag, self.depth)
+        self.screen = pygame.display.set_mode(self.size, self.flag, self.depth)
         pygame.display.set_icon(pygame.image.load(icon_path))
         pygame.display.set_caption(caption)
         pygame.font.init()
@@ -62,7 +63,7 @@ class Window:
     def update(self):
         self.UpdateEvents()
         self.Scene.update()
-        self.screen.blit(pygame.transform.smoothscale(self.Scene.image, self.window_size), (0, 0))
+        self.screen.blit(self.Scene.image, (0, 0))
         if type(self.cursor) is int:
             pygame.mouse.set_cursor(self.cursor)
             pygame.mouse.set_visible(True)
@@ -113,7 +114,3 @@ class Window:
                 if event.buttons[0] or event.touch:
                     self.mouse_wheel_x = event.rel[0]
                     self.mouse_wheel_y = event.rel[1]
-            elif event.type == pygame.WINDOWRESIZED:
-                self.window_size = SIZE(pygame.display.get_window_size())
-
-# notif = GUI.PrintWindow(None, (0, 0, 300, 500), 0.1, "Печать заготовок.", (255,255,255), (100, 100, 100), (255, 0, 0), 1, (200, 200, 200))

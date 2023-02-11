@@ -1,18 +1,17 @@
-import numpy
-import pygame
-import win32print
-import win32process
-import win32api
-from constants import *
 import os
 import sys
+import numpy
+import pygame
 import psutil
+import win32ui
+import win32api
+import win32print
+import win32process
+from constants import *
 from screeninfo import get_monitors
+from PIL import Image, ImageWin, ImageDraw
 
 pygame.init()
-FULL_SIZE = (get_monitors()[0].width * 0.9, get_monitors()[0].height * 0.9)
-
-DPI = 600
 
 
 class DATA:
@@ -36,8 +35,11 @@ class DATA:
 class SIZE(tuple):
     def __init__(self, data):
         super().__init__()
-        self.w = data[0]
-        self.h = data[1]
+        self.w, self.h = map(int, data)
+
+
+# FULL_SIZE = SIZE((get_monitors()[0].width, get_monitors()[0].height))
+FULL_SIZE = SIZE((win32api.GetSystemMetrics(16), win32api.GetSystemMetrics(17)))
 
 
 def getFileProperties(name: str) -> DATA:
@@ -68,8 +70,41 @@ def getFileProperties(name: str) -> DATA:
     return DATA(props)
 
 
-def MillimetersToPixels(mm: int) -> int:
-    return round((mm * DPI) / 25.4)
+class Printer:
+    def __init__(self, printer_name:str):
+        self._print_image = None
+        self._hDC = win32ui.CreateDC()
+        self._hDC.CreatePrinterDC(printer_name)
+        self.printable_area = self._hDC.GetDeviceCaps(HORZRES), self._hDC.GetDeviceCaps(VERTRES)
+        self.printer_size = self._hDC.GetDeviceCaps(PHYSICALWIDTH), self._hDC.GetDeviceCaps(PHYSICALHEIGHT)
+        self.printer_dpi = self._hDC.GetDeviceCaps(LOGPIXELSX)
+
+    def mmTOpx(self, mm: int) -> int:
+        """
+
+        mm:     millimeters :   int
+        Return: pixels      :   int
+        """
+        return round((mm * self.printer_dpi) / 25.4)
+
+    def newTask(self, image, task_name):
+        if type(image) is str:
+            self._print_image = Image.open(image)
+        elif type(image) is Image.Image:
+            self._print_image = image
+        else:
+            raise TypeError(f'Unsupported type for image (type: {type(image)}')
+
+        self._print_image.rotate(90 if self._print_image.size[0] > self._print_image.size[1] else 0)
+        self._hDC.StartDoc(task_name)
+        self._hDC.StartPage()
+        ImageWin.Dib(self._print_image).draw(self._hDC.GetHandleOutput(), (0, 0, *self.printable_area))
+        self._hDC.EndPage()
+        self._hDC.EndDoc()
+        self._print_image = None
+
+    def close(self):
+        self._hDC.DeleteDC()
 
 
 def get_pid_by_hwnd(hwnd: int) -> int:
@@ -83,6 +118,7 @@ def get_pid_by_hwnd(hwnd: int) -> int:
 
 def GetPrintersList() -> tuple:
     """
+
     Return tuple of name all available printers.
     """
     return tuple(i[2] for i in win32print.EnumPrinters(win32print.PRINTER_ENUM_LOCAL | win32print.PRINTER_ENUM_CONNECTIONS))
@@ -90,7 +126,7 @@ def GetPrintersList() -> tuple:
 
 def GetDefaultPrinter() -> str:
     """
+
     Return string of name default printer.
     """
     return win32print.GetDefaultPrinter()
-
