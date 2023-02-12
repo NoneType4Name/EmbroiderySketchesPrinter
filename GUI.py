@@ -1,6 +1,3 @@
-import numpy
-import pygame
-
 from functions import *
 pygame.font.init()
 
@@ -163,6 +160,8 @@ class PrintWindow(pygame.sprite.Sprite):
                  # button_color_active, button_border_active, button_text_color_active,
                  # select_bar_color, select_bar_border, select_bar_text,
                  background,
+                 border=0,
+                 border_color=()
                  ):
         pygame.sprite.Sprite.__init__(self)
         self.parent = parent
@@ -184,6 +183,8 @@ class PrintWindow(pygame.sprite.Sprite):
         # self.select_bar_border = select_bar_border
         # self.select_bar_text = select_bar_text
         self.background = background
+        self.border = border
+        self.border_color = border_color
 
         self._printers = GetPrintersList()
         self._printer = self._printers.index(GetDefaultPrinter())
@@ -192,8 +193,8 @@ class PrintWindow(pygame.sprite.Sprite):
         self.close_button = Button(
             self.parent,
             (self.rect.w - self.rect.h * 0.06, self.rect.h * 0.025, self.rect.h * 0.05, self.rect.h * 0.05),
-            (self.rect.w - self.rect.h * 0.06, self.rect.h * 0.025, self.rect.h * 0.04, self.rect.h * 0.05),
-            (self.rect.w - self.rect.h * 0.06, self.rect.h * 0.025, self.rect.h * 0.04, self.rect.h * 0.05),
+            (0, 0, self.rect.h * 0.08, self.rect.h * 0.08),
+            (0, 0, self.rect.h * 0.08, self.rect.h * 0.08),
             '×',
             '×',
             self.close_button_color,
@@ -342,7 +343,7 @@ class PrintWindow(pygame.sprite.Sprite):
         self.selectable_elements = pygame.sprite.Group(self.close_button, self.printer_name_select_down, self.printer_name_select_up, self.cancelButton, self.printButton)
 
     def update(self):
-        self.image.blit(RoundedRect(self.rect, self.background, self.radius), (0, 0))
+        self.image.blit(RoundedRect(self.rect, self.background, self.radius,self.border, self.border_color), (0, 0))
         self.image.blit(RoundedRect((0, 0, self.rect.w, self.rect.h*0.1), self.description_background, self.radius), (0, 0))
         font = Font.render(self.description, pygame.Rect(0, 0, self.rect.w*0.9, self.rect.h * 0.05), True, self.description_color)
         self.image.blit(font, (self.rect.w * 0.5 - font.get_size()[0] * 0.5, self.rect.h * 0.1 * 0.5 - font.get_size()[1] * 0.5))
@@ -447,3 +448,61 @@ class Label(pygame.sprite.Sprite):
         else:
             self.rect.x += x
             self.rect.y += y
+
+
+class DataPanel(pygame.sprite.Sprite):
+    def __init__(self, parent, rect, background, radius=0.5, border=0, border_color=()):
+        pygame.sprite.Sprite.__init__(self)
+        self.parent = parent
+        self.rect = pygame.Rect(rect)
+        self.image = pygame.Surface((self.rect.w, self.rect.h), pygame.SRCALPHA)
+        self.background = background
+        self.radius = radius
+        self.border = border
+        self.border_color = border_color
+
+        self.open = True
+        self.OCButton = Button(
+            self,
+            (self.rect.w * 0.95, self.rect.h * 0.45, self.rect.w * 0.05, self.rect.h * 0.1),
+            (self.rect.w * 0.95, self.rect.h * 0.45, self.rect.w * 0.05, self.rect.h * 0.1),
+            (self.rect.w * 0.95, self.rect.h * 0.45, self.rect.w * 0.05, self.rect.h * 0.1),
+            '<',
+            '<',
+            self.background,
+            self.background,
+            (255, 255, 255),
+            (255, 255, 255),
+            # border=(self.rect.w * 0.05 + self.rect.h * 0.1) * 0.05,
+            # border_color=self.background,
+            # border_active=(self.rect.w * 0.05 + self.rect.h * 0.1) * 0.05,
+            # border_color_active=self.background,
+            radius=0,
+            radius_active=0,
+            func=lambda s: s.parent.OpenClose(),
+            real_pos=numpy.array(self.rect.topleft)+numpy.array((self.rect.w * 0.95, self.rect.h * 0.45))
+        )
+        self.selectable_elements = pygame.sprite.Group(self.OCButton)
+
+    def update(self):
+        if self.open:
+            self.image.blit(RoundedRect((0, 0, self.rect.w * 0.95, self.rect.h), self.background, self.radius, self.border, self.border_color), (0, 0))
+        self.selectable_elements.update()
+        self.selectable_elements.draw(self.image)
+
+    def OpenClose(self):
+        self.image = pygame.Surface((self.rect.w, self.rect.h), pygame.SRCALPHA)
+        if self.open:
+            self.open = False
+            self.OCButton.text = self.OCButton.text_active = '>'
+            self.OCButton.rect.x = self.border*4
+            self.OCButton.real_pos[0] = 0
+        else:
+            self.open = True
+            self.OCButton.text = self.OCButton.text_active = '<'
+            self.OCButton.rect.x = self.rect.w * 0.95
+            self.OCButton.real_pos[0] = self.rect.w * 0.95 + self.rect.x
+            # self.OCButton.RectEdit(self.rect.w * 0.95, 0)
+            # numpy.array(self.rect.topleft) + numpy.array((self.rect.w * 0.95, self.rect.h * 0.45))
+            # self.rect.x = 0
+        self.OCButton.UpdateImage()

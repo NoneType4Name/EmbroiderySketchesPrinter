@@ -1,37 +1,14 @@
 import win32print
 import win32ui
 from PIL import Image, ImageWin, ImageDraw
-
-#
-# Constants for GetDeviceCaps
-#
-#
-# HORZRES / VERTRES = printable area
-#
-HORZRES = 8
-VERTRES = 10
-#
-# LOGPIXELS = dots per inch
-#
-LOGPIXELSX = 88
-LOGPIXELSY = 90
-#
-# PHYSICALWIDTH/HEIGHT = total area
-#
-PHYSICALWIDTH = 110
-PHYSICALHEIGHT = 111
-
-#
-# PHYSICALOFFSETX/Y = left / top margin
-#
-PHYSICALOFFSETX = 112
-PHYSICALOFFSETY = 113
+from win32con import *
+# all used constant for printer get from: learn.microsoft.com/windows/win32/api/wingdi/nf-wingdi-getdevicecaps
 
 hDC = win32ui.CreateDC()
 hDC.CreatePrinterDC(win32print.GetDefaultPrinter())
 printable_area = hDC.GetDeviceCaps(HORZRES), hDC.GetDeviceCaps(VERTRES)
 printer_size = hDC.GetDeviceCaps(PHYSICALWIDTH), hDC.GetDeviceCaps(PHYSICALHEIGHT)
-DPI = hDC.GetDeviceCaps(88)
+DPI = hDC.GetDeviceCaps(LOGPIXELSX)
 
 
 def MillimetersToPixels(mm: int) -> int:

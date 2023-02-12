@@ -39,7 +39,7 @@ class SIZE(tuple):
 
 
 # FULL_SIZE = SIZE((get_monitors()[0].width, get_monitors()[0].height))
-FULL_SIZE = SIZE((win32api.GetSystemMetrics(16), win32api.GetSystemMetrics(17)))
+FULL_SIZE = SIZE((win32api.GetSystemMetrics(16)+2, win32api.GetSystemMetrics(17)+2))
 
 
 def getFileProperties(name: str) -> DATA:

@@ -10,6 +10,6 @@ else:
     EXE = False
 
 window = Window(__file__, MAIN_DIR, EXE)
-window.init("Embroidery Sketches Printer", f"{DATAS_FOLDER_NAME}/ico.png", SIZE((FULL_SIZE.w * 0.7, FULL_SIZE.h * 0.7)))
+window.init("Embroidery Sketches Printer", f"{DATAS_FOLDER_NAME}/ico.png", FULL_SIZE)
 while window.RUN:
     window.update()
