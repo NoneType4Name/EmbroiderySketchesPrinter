@@ -15,7 +15,7 @@ class SceneMain:
         self.notifications = pygame.sprite.Group()
         self.data_panel = GUI.DataPanel(
             self.parent,
-            (-(self.size.w * 0.2 + self.size.h * 0.8) * 0.003*4, self.size.h * 0.05, self.size.w * 0.2, self.size.h * 0.9),
+            (-(self.size.w * 0.2 + self.size.h * 0.8) * 0.003*8, self.size.h * 0.05, self.size.w * 0.2, self.size.h * 0.9),
             (100, 200, 200), 0.2, (self.size.w * 0.2 + self.size.h * 0.8) * 0.003, (255,255,255)
         )
         self.print_button = GUI.Button(self,

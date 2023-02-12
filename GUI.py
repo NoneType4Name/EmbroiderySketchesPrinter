@@ -1,3 +1,5 @@
+import pygame
+
 from functions import *
 pygame.font.init()
 
@@ -450,6 +452,169 @@ class Label(pygame.sprite.Sprite):
             self.rect.y += y
 
 
+class TextInput(pygame.sprite.Sprite):
+    def __init__(self, parent, rect, text_rect, default_text, text, left_padding: float,
+                 color, color_active, text_color, text_color_active,
+                 border_color=(), border_color_active=(), border=0, radius=0.5, border_active=0,
+                 radius_active=0.5, func_activate=None, func_deactivate=None, real_pos=None, max_len=None):
+        pygame.sprite.Sprite.__init__(self)
+        self.parent = parent
+        self.rect = pygame.Rect(rect)
+        self.image = pygame.Surface((self.rect.w, self.rect.h), pygame.SRCALPHA)
+
+        self.text_rect = pygame.Rect(text_rect)
+        self.default = default_text
+        self.text = text
+        self.value = self.text if self.text else self.default
+        self.left_padding = left_padding
+        self.color = pygame.Color(color)
+        self.color_active = pygame.Color(color_active)
+
+        self.text_color = pygame.Color(text_color)
+        self.text_color_active = pygame.Color(text_color_active)
+        self.border = border
+        self.border_color = border_color
+        self.radius = radius
+        self.border_active = border_active
+        self.border_color_active = border_color_active
+        self.radius_active = radius_active
+        self.func_activate = func_activate if func_activate else lambda s: s
+        self.func_deactivate = func_deactivate if func_deactivate else lambda s: s
+        self.real_pos = real_pos
+        self.max_len = max_len
+
+        self.active = False
+        self.pos = len(self.value)
+
+    def update(self):
+        self.image = pygame.Surface((self.rect.w, self.rect.h), pygame.SRCALPHA)
+        font = Font.render(self.value, pygame.Rect(*self.text_rect.topleft, self.text_rect.w - self.border * 2, self.text_rect.h - self.border * 2), True, self.text_color)
+        font_active = Font.render(self.value, pygame.Rect(*self.text_rect.topleft, self.text_rect.w - self.border_active * 2, self.text_rect.h - self.border_active * 2), True, self.text_color_active)
+        size = font.get_size()
+        if self.active:
+            if self.isCollide():
+                self.parent.parent.cursor = pygame.SYSTEM_CURSOR_IBEAM
+            self.image.blit(RoundedRect(self.rect, self.color_active, self.radius, self.border_active, self.border_color_active), (0, 0))
+            if time.time() % 1 > 0.5:
+                ft = Font.render(self.text[:self.pos], self.text_rect, True, (0, 0, 0))
+                sz = ft.get_size()
+                width = 2
+                pygame.draw.line(self.image,
+                                 (self.color_active.r - 100 if self.color_active.r - 100 > 0 else 100,
+                                  self.color_active.g - 100 if self.color_active.g - 100 > 0 else 100,
+                                  self.color_active.b - 100 if self.color_active.b - 100 > 0 else 100),
+                                 ((self.text_rect.w * self.left_padding - size[0] * 0.5) - width + sz[0] + self.text_rect.x,
+                                  self.text_rect.h * 0.5 - size[1] * 0.5 + self.text_rect.y),
+                                 ((self.text_rect.w * self.left_padding - size[0] * 0.5) - width + sz[0] + self.text_rect.x,
+                                  self.text_rect.h * 0.5 + size[1] * 0.5 + self.text_rect.y),
+                                 width)
+        else:
+            self.image.blit(RoundedRect(self.rect, self.color, self.radius, self.border, self.border_color), (0, 0))
+            if self.isCollide():
+                self.parent.parent.cursor = pygame.SYSTEM_CURSOR_HAND
+        if self.text:
+            self.image.blit(font_active,
+                            (self.rect.w * self.left_padding - size[0] * 0.5, self.rect.h * 0.5 - size[1] * 0.5))
+        else:
+            self.image.blit(font,
+                            (self.rect.w * self.left_padding - size[0] * 0.5, self.rect.h * 0.5 - size[1] * 0.5))
+        if self.isCollide() and self.parent.parent.mouse_left_release:
+            self.active = True
+        elif not self.isCollide() and self.parent.parent.mouse_left_release:
+            self.active = False
+
+        if any(map(lambda e: e.type in (pygame.KEYDOWN, pygame.KEYUP, pygame.TEXTEDITING, pygame.TEXTINPUT), self.parent.events)):
+            for event in self.parent.events:
+                if self.active:
+                    if event.type == pygame.KEYDOWN:
+                        if event.key == pygame.K_BACKSPACE:
+                            if self.pos:
+                                if pygame.key.get_mods() & pygame.KMOD_LCTRL:
+                                    for n, sim in enumerate(self.text[self.pos::-1]):
+                                        if sim in PUNCTUATION:
+                                            self.text = self.text[:self.pos - (n if n != 0 else 1)] + self.text[self.pos:]
+                                            self.pos -= n if n != 0 else 1
+                                            break
+                                    else:
+                                        self.text = self.text[self.pos:]
+                                        self.pos = 0
+                                else:
+                                    self.text = self.text[:self.pos - 1] + self.text[self.pos:]
+                                    self.pos -= 1
+                        elif event.key == pygame.K_LEFT:
+                            if pygame.key.get_mods() & pygame.KMOD_LCTRL:
+                                for n, sim in enumerate(self.text[:self.pos][::-1]):
+                                    if sim in PUNCTUATION:
+                                        self.pos -= n if n != 0 else 1
+                                        break
+                                else:
+                                    self.pos = 0
+                            elif self.pos - 1 >= 0:
+                                self.pos -= 1
+                        elif event.key == pygame.K_RIGHT:
+                            if pygame.key.get_mods() & pygame.KMOD_LCTRL:
+                                for n, sim in enumerate(self.text[self.pos:]):
+                                    if sim in PUNCTUATION:
+                                        self.pos += n if n != 0 else 1
+                                        break
+                                else:
+                                    self.pos = len(self.text)
+                            elif self.pos + 1 <= len(self.text):
+                                self.pos += 1
+                        elif event.key == pygame.K_DELETE:
+                            if pygame.key.get_mods() & pygame.KMOD_LCTRL:
+                                for n, sim in enumerate(self.text[self.pos:]):
+                                    if sim in PUNCTUATION:
+                                        self.text = self.text[:self.pos] + self.text[self.pos + n if n != 0 else 1:]
+                                        break
+                                else:
+                                    self.text = self.text[:self.pos]
+                            else:
+                                self.text = self.text[:self.pos] + self.text[self.pos + 1:]
+                        elif event.key == pygame.K_HOME:
+                            self.pos = 0
+                        elif event.key == pygame.K_END:
+                            self.pos = len(self.text)
+                        elif event.key == pygame.K_RETURN or event.key == pygame.K_KP_ENTER:
+                            if pygame.key.get_mods() & pygame.KMOD_LCTRL and not self.text:
+                                self.text = self.default
+                                self.pos = len(self.text)
+                            else:
+                                self.Deactivate()
+                        elif event.key == pygame.K_v and pygame.key.get_mods() & pygame.KMOD_LCTRL:
+                            pygame.scrap.set_mode(pygame.SCRAP_CLIPBOARD)
+                            paste_text = pygame.scrap.get(pygame.SCRAP_TEXT).decode().translate(ESCAPE_CHARS_TRANSLATER)
+                            if paste_text:
+                                paste_text = paste_text[:self.max_len - len(self.text) if self.max_len is not None and self.pos + len(paste_text) > self.max_len else None]
+                                self.text = self.text = self.text[:self.pos] + paste_text + self.text[self.pos:]
+                                self.pos += len(paste_text)
+                    elif event.type == pygame.TEXTINPUT:
+                        text = event.text[:self.max_len-len(self.text) if self.max_len is not None and self.pos+len(event.text) > self.max_len else None]
+                        self.text = self.text[:self.pos] + text + self.text[self.pos:]
+                        self.pos += len(text)
+                    elif event.type == pygame.KEYUP:
+                        if event.key == pygame.K_ESCAPE:
+                            self.Deactivate()
+                    self.value = self.text if self.text else self.default
+        return self.image
+
+    def isCollide(self):
+        return pygame.Rect(*self.real_pos, self.rect.w, self.rect.h).collidepoint(pygame.mouse.get_pos()) if self.real_pos is not None else self.rect.collidepoint(pygame.mouse.get_pos())
+
+    def Activate(self):
+        self.active = True
+        self.pos = len(self.text)
+        while not pygame.key.get_focused() or not pygame.key.get_repeat()[0]:
+            pygame.key.start_text_input()
+            pygame.key.set_repeat(500, 50)
+        self.func_activate(self)
+
+    def Deactivate(self):
+        self.active = False
+        pygame.key.set_repeat(0, 0)
+        self.func_deactivate(self)
+
+
 class DataPanel(pygame.sprite.Sprite):
     def __init__(self, parent, rect, background, radius=0.5, border=0, border_color=()):
         pygame.sprite.Sprite.__init__(self)
@@ -460,8 +625,26 @@ class DataPanel(pygame.sprite.Sprite):
         self.radius = radius
         self.border = border
         self.border_color = border_color
+        self.events = self.parent.events
 
         self.open = True
+        self.TextBox1 = TextInput(self,
+                                  (self.rect.w * 0.3, self.rect.h * 0.1, self.rect.w * 0.1, self.rect.h*0.05),
+                                  (self.rect.w * 0.3, self.rect.h * 0.1, self.rect.w * 0.1, self.rect.h*0.05),
+                                  '','',0.5,
+                                  (255, 255, 255),
+                                  (202, 219, 252),
+                                  (0, 0, 0),
+                                  (0, 0, 0),
+                                  (102, 153, 255),
+                                  (0, 0, 255),
+                                  (self.rect.w * 0.05 + self.rect.h * 0.05) * 0.01,
+                                  0.4,
+                                  (self.rect.w * 0.05 + self.rect.h * 0.05) * 0.01,
+                                  0.4,
+                                  real_pos=numpy.array(self.rect.topleft)+numpy.array((self.rect.w * 0.3, self.rect.h * 0.1)),
+                                  max_len=3
+                                  )
         self.OCButton = Button(
             self,
             (self.rect.w * 0.95, self.rect.h * 0.45, self.rect.w * 0.05, self.rect.h * 0.1),
@@ -482,9 +665,10 @@ class DataPanel(pygame.sprite.Sprite):
             func=lambda s: s.parent.OpenClose(),
             real_pos=numpy.array(self.rect.topleft)+numpy.array((self.rect.w * 0.95, self.rect.h * 0.45))
         )
-        self.selectable_elements = pygame.sprite.Group(self.OCButton)
+        self.selectable_elements = pygame.sprite.Group(self.OCButton, self.TextBox1)
 
     def update(self):
+        self.events = self.parent.events
         if self.open:
             self.image.blit(RoundedRect((0, 0, self.rect.w * 0.95, self.rect.h), self.background, self.radius, self.border, self.border_color), (0, 0))
         self.selectable_elements.update()
@@ -495,7 +679,7 @@ class DataPanel(pygame.sprite.Sprite):
         if self.open:
             self.open = False
             self.OCButton.text = self.OCButton.text_active = '>'
-            self.OCButton.rect.x = self.border*4
+            self.OCButton.rect.x = self.border*8
             self.OCButton.real_pos[0] = 0
         else:
             self.open = True

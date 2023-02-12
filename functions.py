@@ -1,8 +1,10 @@
 import os
 import sys
+import time
 import numpy
 import pygame
 import psutil
+import string
 import win32ui
 import win32api
 import win32print
@@ -10,6 +12,9 @@ import win32process
 from constants import *
 from screeninfo import get_monitors
 from PIL import Image, ImageWin, ImageDraw
+PUNCTUATION = string.punctuation+' '
+ESCAPE_CHARS = '\n\a\b\f\r\t\v\x00'
+ESCAPE_CHARS_TRANSLATER = str.maketrans(dict.fromkeys(list(ESCAPE_CHARS), None))
 
 pygame.init()
 
