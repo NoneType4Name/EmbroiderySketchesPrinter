@@ -1015,9 +1015,12 @@ class DataPanel(pygame.sprite.Sprite):
         #         (self.rect.w * 0.77, self.rect.h * 0.7))
         # )
         self.elements = pygame.sprite.Group()
-        c = ['Основание груди', 'Обхват талии', 'Обхват низа корсета',
-             'Высота основания груди', 'Высота бока вверх', 'Высота бока вниз', 'Утяжка']
-        for n, name in enumerate(c, 1):
+        self.text_input_elements = pygame.sprite.Group()
+        ru = ['Основание груди', 'Обхват талии', 'Обхват низа корсета',
+              'Высота основания груди', 'Высота бока вверх', 'Высота бока вниз', 'Утяжка']
+        self.data = ['', '', '', '', '', '', '']
+
+        for n, name in enumerate(ru, 1):
             l1 = Label(
                 self.parent,
                 (self.rect.w * 0.1, self.rect.h * 0.1 * n - 1, self.rect.w * 0.4, self.rect.h * 0.05),
@@ -1035,7 +1038,7 @@ class DataPanel(pygame.sprite.Sprite):
                 self,
                 (self.rect.w * 0.6, self.rect.h * 0.1 * n - 1, self.rect.w * 0.15, self.rect.h * 0.05),
                 (0, 0, self.rect.w * 0.15, self.rect.h * 0.05),
-                '', '', 0.5,
+                self.data[n-1], self.data[n-1], 0.5,
                 (255, 255, 255),
                 (202, 219, 252),
                 (0, 0, 0),
@@ -1048,8 +1051,10 @@ class DataPanel(pygame.sprite.Sprite):
                 0.4,
                 real_pos=numpy.array(self.rect.topleft) + numpy.array(
                     (self.rect.w * 0.6, self.rect.h * 0.1 * n - 1)),
-                max_len=3
+                max_len=3,
+                func_deactivate=lambda s: s.parent.data.__setitem__(s.num, s.value)
             )
+            t.num = n-1
             l2 = Label(
                 self.parent,
                 (self.rect.w * 0.77, self.rect.h * 0.1 * n - 1, self.rect.w * 0.15, self.rect.h * 0.05),
@@ -1064,6 +1069,7 @@ class DataPanel(pygame.sprite.Sprite):
                     (self.rect.w * 0.77, self.rect.h * 0.1 * n - 1))
             )
             self.elements.add(l1, t, l2)
+            self.text_input_elements.add(t)
 
         self.OCButton = Button(
             self,

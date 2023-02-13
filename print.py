@@ -19,18 +19,13 @@ def DrawCircle(img, x, y, r, fill=None, outline=None, width=1):
     img.ellipse((x-r, y-r, x+r, y+r), fill, outline, width)
 
 
-image = Image.new("L", printable_area, 255)
-drawImage = ImageDraw.Draw(image)
-# drawImage.rectangle((0,0,*image.size), outline=0, width=MillimetersToPixels(1))
-DrawCircle(drawImage, MillimetersToPixels(100), MillimetersToPixels(100), MillimetersToPixels(5), outline=0, width=10)
 
-image = image.rotate(90 if image.size[0] > image.size[1] else 0)
-hDC.StartDoc('Graphic print.')
-hDC.StartPage()
-
-ImageWin.Dib(image).draw(hDC.GetHandleOutput(), (0, 0, *printable_area))
-ImageWin.Dib(image).draw(hDC.GetHandleOutput(), (0, 0, *printable_area))
-
-hDC.EndPage()
-hDC.EndDoc()
-hDC.DeleteDC()
+# image = image.rotate(90 if image.size[0] > image.size[1] and printable_area[0] > printable_area[1] else 0)
+# hDC.StartDoc('Graphic print.')
+# hDC.StartPage()
+#
+# ImageWin.Dib(image).draw(hDC.GetHandleOutput(), (0, 0, *image.size))
+#
+# hDC.EndPage()
+# hDC.EndDoc()
+# hDC.DeleteDC()

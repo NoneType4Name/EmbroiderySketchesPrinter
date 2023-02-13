@@ -1,7 +1,3 @@
-import random
-
-import pygame.sprite
-
 import GUI
 from functions import *
 
