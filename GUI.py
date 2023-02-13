@@ -1,6 +1,7 @@
 import pygame
 
 from functions import *
+
 pygame.font.init()
 
 
@@ -11,10 +12,12 @@ class MainFont:
         else:
             self.font = pygame.font.SysFont("Arial", 256)
 
-    def render(self, text: str, text_rect: pygame.Rect, antialias: bool, color: pygame.Color, background=None) -> pygame.Surface:
+    def render(self, text: str, text_rect: pygame.Rect, antialias: bool, color: pygame.Color,
+               background=None) -> pygame.Surface:
         srf = self.font.render(text, antialias, color, background)
         return pygame.transform.smoothscale(
-            srf, numpy.array(srf.get_size()) / max(numpy.array(srf.get_size()) / numpy.array((text_rect.w, text_rect.h))))
+            srf,
+            numpy.array(srf.get_size()) / max(numpy.array(srf.get_size()) / numpy.array((text_rect.w, text_rect.h))))
 
 
 Font = MainFont(None)
@@ -95,16 +98,21 @@ class Button(pygame.sprite.Sprite):
         self.func = func if func else lambda s, a=(): s
         self.args = args
 
-        font = Font.render(self.text, pygame.Rect(*self.text_rect.topleft, self.text_rect.w - self.border * 2, self.text_rect.h - self.border * 2), True, self.text_color)
+        font = Font.render(self.text, pygame.Rect(*self.text_rect.topleft, self.text_rect.w - self.border * 2,
+                                                  self.text_rect.h - self.border * 2), True, self.text_color)
         size = font.get_size()
         self.image_base = pygame.Surface((self.rect.w, self.rect.h), pygame.SRCALPHA)
         self.image_base.blit(RoundedRect(self.rect, self.color, self.radius, self.border, self.border_color), (0, 0))
         self.image_base.blit(font, (self.rect.w * 0.5 - size[0] * 0.5, self.rect.h * 0.5 - size[1] * 0.5))
 
-        font = Font.render(self.text_active, pygame.Rect(*self.text_rect_active.topleft, self.text_rect_active.w - self.border_active * 2, self.text_rect_active.h - self.border_active * 2), True, self.color_act_text)
+        font = Font.render(self.text_active,
+                           pygame.Rect(*self.text_rect_active.topleft, self.text_rect_active.w - self.border_active * 2,
+                                       self.text_rect_active.h - self.border_active * 2), True, self.color_act_text)
         size = font.get_size()
         self.image_active = pygame.Surface((self.rect.w, self.rect.h), pygame.SRCALPHA)
-        self.image_active.blit(RoundedRect(self.rect, self.color_active, self.radius_active, self.border_active, self.border_color_active), (0, 0))
+        self.image_active.blit(
+            RoundedRect(self.rect, self.color_active, self.radius_active, self.border_active, self.border_color_active),
+            (0, 0))
         self.image_active.blit(font, (self.rect.w * 0.5 - size[0] * 0.5, self.rect.h * 0.5 - size[1] * 0.5))
         self.collide = False
 
@@ -124,19 +132,25 @@ class Button(pygame.sprite.Sprite):
             self.image = self.image_base
 
     def UpdateImage(self):
-        font = Font.render(self.text, pygame.Rect(*self.text_rect.topleft, self.text_rect.w - self.border * 2, self.text_rect.h - self.border * 2), True, self.text_color)
+        font = Font.render(self.text, pygame.Rect(*self.text_rect.topleft, self.text_rect.w - self.border * 2,
+                                                  self.text_rect.h - self.border * 2), True, self.text_color)
         size = font.get_size()
         self.image_base = pygame.Surface((self.rect.w, self.rect.h), pygame.SRCALPHA)
         self.image_base.blit(RoundedRect(self.rect, self.color, self.radius, self.border, self.border_color), (0, 0))
         self.image_base.blit(font, (self.rect.w * 0.5 - size[0] * 0.5, self.rect.h * 0.5 - size[1] * 0.5))
-        font = Font.render(self.text_active, pygame.Rect(*self.text_rect_active.topleft, self.text_rect_active.w - self.border_active * 2, self.text_rect_active.h - self.border_active * 2), True, self.color_act_text)
+        font = Font.render(self.text_active,
+                           pygame.Rect(*self.text_rect_active.topleft, self.text_rect_active.w - self.border_active * 2,
+                                       self.text_rect_active.h - self.border_active * 2), True, self.color_act_text)
         size = font.get_size()
         self.image_active = pygame.Surface((self.rect.w, self.rect.h), pygame.SRCALPHA)
-        self.image_active.blit(RoundedRect(self.rect, self.color_active, self.radius_active, self.border_active, self.border_color_active), (0, 0))
+        self.image_active.blit(
+            RoundedRect(self.rect, self.color_active, self.radius_active, self.border_active, self.border_color_active),
+            (0, 0))
         self.image_active.blit(font, (self.rect.w * 0.5 - size[0] * 0.5, self.rect.h * 0.5 - size[1] * 0.5))
 
     def isCollide(self):
-        return pygame.Rect(*self.real_pos, self.rect.w, self.rect.h).collidepoint(pygame.mouse.get_pos()) if self.real_pos is not None else self.rect.collidepoint(pygame.mouse.get_pos())
+        return pygame.Rect(*self.real_pos, self.rect.w, self.rect.h).collidepoint(
+            pygame.mouse.get_pos()) if self.real_pos is not None else self.rect.collidepoint(pygame.mouse.get_pos())
 
     def Function(self):
         if self.args:
@@ -206,7 +220,8 @@ class PrintWindow(pygame.sprite.Sprite):
             radius=self.close_button_radius,
             radius_active=self.close_button_radius,
             func=lambda _: self.kill(),
-            real_pos=numpy.array(self.rect.topleft)+numpy.array((self.rect.w - self.rect.h * 0.06, self.rect.h * 0.025))
+            real_pos=numpy.array(self.rect.topleft) + numpy.array(
+                (self.rect.w - self.rect.h * 0.06, self.rect.h * 0.025))
         )
 
         self.printer_label = Label(
@@ -217,8 +232,8 @@ class PrintWindow(pygame.sprite.Sprite):
             'Принтер',
             self.background,
             self.background,
-            (255,255,255),
-            (255,255,255))
+            (255, 255, 255),
+            (255, 255, 255))
         self.printer_name_label = Label(
             self.parent,
             (self.rect.w * 0.4, self.rect.h * 0.3, self.rect.w * 0.35, self.rect.h * 0.08),
@@ -254,8 +269,10 @@ class PrintWindow(pygame.sprite.Sprite):
             1,
             (self.rect.h * 0.08 * 2) * 0.04,
             1,
-            func=lambda _: (setattr(self, '_printer', (self._printer + (1 if self._printer + 1 <= len(self._printers) - 1 else -self._printer)))) or setattr(self.printer_name_label, 'value', self._printers[self._printer]),
-            real_pos=numpy.array(self.rect.topleft) + numpy.array((self.rect.w * 0.8, self  .rect.h * 0.3))
+            func=lambda _: (setattr(self, '_printer', (self._printer + (
+                1 if self._printer + 1 <= len(self._printers) - 1 else -self._printer)))) or setattr(
+                self.printer_name_label, 'value', self._printers[self._printer]),
+            real_pos=numpy.array(self.rect.topleft) + numpy.array((self.rect.w * 0.8, self.rect.h * 0.3))
 
         )
         self.selected_item_num = None
@@ -276,7 +293,9 @@ class PrintWindow(pygame.sprite.Sprite):
             1,
             (self.rect.h * 0.08 * 2) * 0.04,
             1,
-            func=lambda _: (setattr(self, '_printer', (self._printer - (1 if self._printer - 1 >= 0 else -(len(self._printers) - 1))))) or setattr(self.printer_name_label, 'value', self._printers[self._printer]),
+            func=lambda _: (setattr(self, '_printer', (
+                    self._printer - (1 if self._printer - 1 >= 0 else -(len(self._printers) - 1))))) or setattr(
+                self.printer_name_label, 'value', self._printers[self._printer]),
             real_pos=numpy.array(self.rect.topleft) + numpy.array((self.rect.w * 0.9, self.rect.h * 0.3)))
 
         self.printer_label3 = Label(
@@ -287,8 +306,8 @@ class PrintWindow(pygame.sprite.Sprite):
             'Печать по умолчанию только черными чернилами.',
             self.background,
             self.background,
-            (255,255,255),
-            (255,255,255))
+            (255, 255, 255),
+            (255, 255, 255))
 
         self.printer_label2 = Label(
             self,
@@ -298,8 +317,8 @@ class PrintWindow(pygame.sprite.Sprite):
             'Листов к печати: N',
             self.background,
             self.background,
-            (255,255,255),
-            (255,255,255))
+            (255, 255, 255),
+            (255, 255, 255))
 
         self.cancelButton = Button(
             self.parent,
@@ -342,13 +361,17 @@ class PrintWindow(pygame.sprite.Sprite):
 
         self._drag = False
         self.elements.add(self.printer_name_label, self.printer_label, self.printer_label2, self.printer_label3)
-        self.selectable_elements = pygame.sprite.Group(self.close_button, self.printer_name_select_down, self.printer_name_select_up, self.cancelButton, self.printButton)
+        self.selectable_elements = pygame.sprite.Group(self.close_button, self.printer_name_select_down,
+                                                       self.printer_name_select_up, self.cancelButton, self.printButton)
 
     def update(self):
-        self.image.blit(RoundedRect(self.rect, self.background, self.radius,self.border, self.border_color), (0, 0))
-        self.image.blit(RoundedRect((0, 0, self.rect.w, self.rect.h*0.1), self.description_background, self.radius), (0, 0))
-        font = Font.render(self.description, pygame.Rect(0, 0, self.rect.w*0.9, self.rect.h * 0.05), True, self.description_color)
-        self.image.blit(font, (self.rect.w * 0.5 - font.get_size()[0] * 0.5, self.rect.h * 0.1 * 0.5 - font.get_size()[1] * 0.5))
+        self.image.blit(RoundedRect(self.rect, self.background, self.radius, self.border, self.border_color), (0, 0))
+        self.image.blit(RoundedRect((0, 0, self.rect.w, self.rect.h * 0.1), self.description_background, self.radius),
+                        (0, 0))
+        font = Font.render(self.description, pygame.Rect(0, 0, self.rect.w * 0.9, self.rect.h * 0.05), True,
+                           self.description_color)
+        self.image.blit(font, (
+            self.rect.w * 0.5 - font.get_size()[0] * 0.5, self.rect.h * 0.1 * 0.5 - font.get_size()[1] * 0.5))
         self.elements.update()
         self.selectable_elements.update()
         if self.selected_item_num is not None:
@@ -364,29 +387,33 @@ class PrintWindow(pygame.sprite.Sprite):
                     if self.selected_item_num is None:
                         self.selected_item_num = 0
                     else:
-                        self.selected_item_num += 1 if self.selected_item_num + 1 <= len(self.selectable_elements) - 1 else -self.selected_item_num
+                        self.selected_item_num += 1 if self.selected_item_num + 1 <= len(
+                            self.selectable_elements) - 1 else -self.selected_item_num
                 elif event.key in (pygame.K_SPACE, pygame.K_KP_ENTER, pygame.KSCAN_KP_ENTER):
                     if self.selected_item_num is not None:
                         self.selectable_elements.sprites()[self.selected_item_num].Function()
             elif event.type == pygame.MOUSEBUTTONDOWN:
-                if pygame.Rect(*self.rect.topleft, self.rect.w, self.rect.h*0.1).collidepoint(self.parent.parent.mouse_pos):
+                if pygame.Rect(*self.rect.topleft, self.rect.w, self.rect.h * 0.1).collidepoint(
+                        self.parent.parent.mouse_pos):
                     self._drag = True
             elif event.type == pygame.MOUSEBUTTONUP:
-                if pygame.Rect(*self.rect.topleft, self.rect.w, self.rect.h * 0.1).collidepoint(self.parent.parent.mouse_pos):
+                if pygame.Rect(*self.rect.topleft, self.rect.w, self.rect.h * 0.1).collidepoint(
+                        self.parent.parent.mouse_pos):
                     self._drag = False
             elif event.type == pygame.MOUSEMOTION:
                 if self._drag:
                     rel = numpy.array(self.rect.topleft) + numpy.array(event.rel)
                     eve_rel = [*event.rel]
-                    if 0 <= rel[0] <= self.parent.parent.size.w-self.rect.w:
+                    if 0 <= rel[0] <= self.parent.parent.size.w - self.rect.w:
                         self.rect.x += event.rel[0]
                     else:
                         eve_rel[0] = 0
-                    if 0 <= rel[1] <= self.parent.parent.size.h-self.rect.h*0.1:
+                    if 0 <= rel[1] <= self.parent.parent.size.h - self.rect.h * 0.1:
                         self.rect.y += event.rel[1]
                     else:
                         eve_rel[1] = 0
-                    tuple(s.RectEdit(*eve_rel, real=True) for s in self.selectable_elements.sprites() + self.elements.sprites())
+                    tuple(s.RectEdit(*eve_rel, real=True) for s in
+                          self.selectable_elements.sprites() + self.elements.sprites())
             elif event.type == pygame.WINDOWLEAVE:
                 if self._drag:
                     self._drag = False
@@ -423,12 +450,19 @@ class Label(pygame.sprite.Sprite):
     def update(self):
         # self.image = pygame.Surface((self.rect.width, self.rect.height), pygame.SRCALPHA)
         if self.isCollide():
-            self.image.blit(RoundedRect((0, 0, self.rect.w, self.rect.h), self.color_active, self.radius_active, self.border_active, self.border_color_active), (0, 0))
-            font = Font.render(self.value, pygame.Rect(*self.text_rect.topleft, self.text_rect.w - self.border * 2, self.text_rect.h - self.border * 2), True, self.text_color_active)
+            self.image.blit(
+                RoundedRect((0, 0, self.rect.w, self.rect.h), self.color_active, self.radius_active, self.border_active,
+                            self.border_color_active), (0, 0))
+            font = Font.render(self.value, pygame.Rect(*self.text_rect.topleft, self.text_rect.w - self.border * 2,
+                                                       self.text_rect.h - self.border * 2), True,
+                               self.text_color_active)
             size = font.get_size()
         else:
-            self.image.blit(RoundedRect((0, 0, self.rect.w, self.rect.h), self.color, self.radius, self.border, self.border_color), (0, 0))
-            font = Font.render(self.value, pygame.Rect(*self.text_rect.topleft, self.text_rect.w - self.border * 2, self.text_rect.h - self.border * 2), True, self.text_color)
+            self.image.blit(
+                RoundedRect((0, 0, self.rect.w, self.rect.h), self.color, self.radius, self.border, self.border_color),
+                (0, 0))
+            font = Font.render(self.value, pygame.Rect(*self.text_rect.topleft, self.text_rect.w - self.border * 2,
+                                                       self.text_rect.h - self.border * 2), True, self.text_color)
             size = font.get_size()
             self.image.blit(font,
                             (self.rect.w * self.left_padding - size[0] // 2, self.rect.h // 2 - size[1] // 2))
@@ -437,7 +471,8 @@ class Label(pygame.sprite.Sprite):
         return self.image
 
     def isCollide(self):
-        return pygame.Rect(*self.real_pos, self.rect.w, self.rect.h).collidepoint(pygame.mouse.get_pos()) if self.real_pos is not None else self.rect.collidepoint(pygame.mouse.get_pos())
+        return pygame.Rect(*self.real_pos, self.rect.w, self.rect.h).collidepoint(
+            pygame.mouse.get_pos()) if self.real_pos is not None else self.rect.collidepoint(pygame.mouse.get_pos())
 
     def Function(self):
         self.func(self)
@@ -488,13 +523,18 @@ class TextInput(pygame.sprite.Sprite):
 
     def update(self):
         self.image = pygame.Surface((self.rect.w, self.rect.h), pygame.SRCALPHA)
-        font = Font.render(self.value, pygame.Rect(*self.text_rect.topleft, self.text_rect.w - self.border * 2, self.text_rect.h - self.border * 2), True, self.text_color)
-        font_active = Font.render(self.value, pygame.Rect(*self.text_rect.topleft, self.text_rect.w - self.border_active * 2, self.text_rect.h - self.border_active * 2), True, self.text_color_active)
+        font = Font.render(self.value, pygame.Rect(*self.text_rect.topleft, self.text_rect.w - self.border * 2,
+                                                   self.text_rect.h - self.border * 2), True, self.text_color)
+        font_active = Font.render(self.value,
+                                  pygame.Rect(*self.text_rect.topleft, self.text_rect.w - self.border_active * 2,
+                                              self.text_rect.h - self.border_active * 2), True, self.text_color_active)
         size = font.get_size()
         if self.active:
             if self.isCollide():
                 self.parent.parent.cursor = pygame.SYSTEM_CURSOR_IBEAM
-            self.image.blit(RoundedRect(self.rect, self.color_active, self.radius, self.border_active, self.border_color_active), (0, 0))
+            self.image.blit(
+                RoundedRect(self.rect, self.color_active, self.radius, self.border_active, self.border_color_active),
+                (0, 0))
             if time.time() % 1 > 0.5:
                 ft = Font.render(self.text[:self.pos], self.text_rect, True, (0, 0, 0))
                 sz = ft.get_size()
@@ -503,9 +543,11 @@ class TextInput(pygame.sprite.Sprite):
                                  (self.color_active.r - 100 if self.color_active.r - 100 > 0 else 100,
                                   self.color_active.g - 100 if self.color_active.g - 100 > 0 else 100,
                                   self.color_active.b - 100 if self.color_active.b - 100 > 0 else 100),
-                                 ((self.text_rect.w * self.left_padding - size[0] * 0.5) - width + sz[0] + self.text_rect.x,
+                                 ((self.text_rect.w * self.left_padding - size[0] * 0.5) - width + sz[
+                                     0] + self.text_rect.x,
                                   self.text_rect.h * 0.5 - size[1] * 0.5 + self.text_rect.y),
-                                 ((self.text_rect.w * self.left_padding - size[0] * 0.5) - width + sz[0] + self.text_rect.x,
+                                 ((self.text_rect.w * self.left_padding - size[0] * 0.5) - width + sz[
+                                     0] + self.text_rect.x,
                                   self.text_rect.h * 0.5 + size[1] * 0.5 + self.text_rect.y),
                                  width)
         else:
@@ -523,7 +565,8 @@ class TextInput(pygame.sprite.Sprite):
         elif not self.isCollide() and self.parent.parent.mouse_left_release:
             self.active = False
 
-        if any(map(lambda e: e.type in (pygame.KEYDOWN, pygame.KEYUP, pygame.TEXTEDITING, pygame.TEXTINPUT), self.parent.events)):
+        if any(map(lambda e: e.type in (pygame.KEYDOWN, pygame.KEYUP, pygame.TEXTEDITING, pygame.TEXTINPUT),
+                   self.parent.events)):
             for event in self.parent.events:
                 if self.active:
                     if event.type == pygame.KEYDOWN:
@@ -532,7 +575,8 @@ class TextInput(pygame.sprite.Sprite):
                                 if pygame.key.get_mods() & pygame.KMOD_LCTRL:
                                     for n, sim in enumerate(self.text[self.pos::-1]):
                                         if sim in PUNCTUATION:
-                                            self.text = self.text[:self.pos - (n if n != 0 else 1)] + self.text[self.pos:]
+                                            self.text = self.text[:self.pos - (n if n != 0 else 1)] + self.text[
+                                                                                                      self.pos:]
                                             self.pos -= n if n != 0 else 1
                                             break
                                     else:
@@ -585,11 +629,14 @@ class TextInput(pygame.sprite.Sprite):
                             pygame.scrap.set_mode(pygame.SCRAP_CLIPBOARD)
                             paste_text = pygame.scrap.get(pygame.SCRAP_TEXT).decode().translate(ESCAPE_CHARS_TRANSLATER)
                             if paste_text:
-                                paste_text = paste_text[:self.max_len - len(self.text) if self.max_len is not None and self.pos + len(paste_text) > self.max_len else None]
+                                paste_text = paste_text[:self.max_len - len(
+                                    self.text) if self.max_len is not None and self.pos + len(
+                                    paste_text) > self.max_len else None]
                                 self.text = self.text = self.text[:self.pos] + paste_text + self.text[self.pos:]
                                 self.pos += len(paste_text)
                     elif event.type == pygame.TEXTINPUT:
-                        text = event.text[:self.max_len-len(self.text) if self.max_len is not None and self.pos+len(event.text) > self.max_len else None]
+                        text = event.text[:self.max_len - len(self.text) if self.max_len is not None and self.pos + len(
+                            event.text) > self.max_len else None]
                         self.text = self.text[:self.pos] + text + self.text[self.pos:]
                         self.pos += len(text)
                     elif event.type == pygame.KEYUP:
@@ -599,7 +646,8 @@ class TextInput(pygame.sprite.Sprite):
         return self.image
 
     def isCollide(self):
-        return pygame.Rect(*self.real_pos, self.rect.w, self.rect.h).collidepoint(pygame.mouse.get_pos()) if self.real_pos is not None else self.rect.collidepoint(pygame.mouse.get_pos())
+        return pygame.Rect(*self.real_pos, self.rect.w, self.rect.h).collidepoint(
+            pygame.mouse.get_pos()) if self.real_pos is not None else self.rect.collidepoint(pygame.mouse.get_pos())
 
     def Activate(self):
         self.active = True
@@ -628,23 +676,395 @@ class DataPanel(pygame.sprite.Sprite):
         self.events = self.parent.events
 
         self.open = True
-        self.TextBox1 = TextInput(self,
-                                  (self.rect.w * 0.3, self.rect.h * 0.1, self.rect.w * 0.1, self.rect.h*0.05),
-                                  (self.rect.w * 0.3, self.rect.h * 0.1, self.rect.w * 0.1, self.rect.h*0.05),
-                                  '','',0.5,
-                                  (255, 255, 255),
-                                  (202, 219, 252),
-                                  (0, 0, 0),
-                                  (0, 0, 0),
-                                  (102, 153, 255),
-                                  (0, 0, 255),
-                                  (self.rect.w * 0.05 + self.rect.h * 0.05) * 0.01,
-                                  0.4,
-                                  (self.rect.w * 0.05 + self.rect.h * 0.05) * 0.01,
-                                  0.4,
-                                  real_pos=numpy.array(self.rect.topleft)+numpy.array((self.rect.w * 0.3, self.rect.h * 0.1)),
-                                  max_len=3
-                                  )
+        # self.TextBoxLabel1 = Label(
+        #     self.parent,
+        #     (self.rect.w * 0.1, self.rect.h * 0.1, self.rect.w * 0.4, self.rect.h * 0.05),
+        #     (self.rect.w * 0.1, self.rect.h * 0.1, self.rect.w * 0.4, self.rect.h * 0.05),
+        #     0.5,
+        #     'Основание груди',
+        #     self.background,
+        #     self.background,
+        #     (255, 255, 255),
+        #     (255, 255, 255),
+        #     real_pos=numpy.array(self.rect.topleft) + numpy.array(
+        #         (self.rect.w * 0.1, self.rect.h * 0.1))
+        # )
+        #
+        # self.TextBox1 = TextInput(self,
+        #                           (self.rect.w * 0.6, self.rect.h * 0.1, self.rect.w * 0.15, self.rect.h * 0.05),
+        #                           (self.rect.w * 0.6, self.rect.h * 0.1, self.rect.w * 0.15, self.rect.h * 0.05),
+        #                           '', '', 0.5,
+        #                           (255, 255, 255),
+        #                           (202, 219, 252),
+        #                           (0, 0, 0),
+        #                           (0, 0, 0),
+        #                           (102, 153, 255),
+        #                           (0, 0, 255),
+        #                           (self.rect.w * 0.05 + self.rect.h * 0.05) * 0.01,
+        #                           0.4,
+        #                           (self.rect.w * 0.05 + self.rect.h * 0.05) * 0.01,
+        #                           0.4,
+        #                           real_pos=numpy.array(self.rect.topleft) + numpy.array(
+        #                               (self.rect.w * 0.6, self.rect.h * 0.1)),
+        #                           max_len=3
+        #                           )
+        # self.TextBoxLabel1_2 = Label(
+        #     self.parent,
+        #     (self.rect.w * 0.77, self.rect.h * 0.1, self.rect.w * 0.15, self.rect.h * 0.05),
+        #     (self.rect.w * 0.77, self.rect.h * 0.1, self.rect.w * 0.15, self.rect.h * 0.05),
+        #     0.5,
+        #     'mm',
+        #     self.background,
+        #     self.background,
+        #     (255, 255, 255),
+        #     (255, 255, 255),
+        #     real_pos=numpy.array(self.rect.topleft) + numpy.array(
+        #         (self.rect.w * 0.77, self.rect.h * 0.1))
+        # )
+        #
+        # self.TextBox2 = TextInput(self,
+        #                           (self.rect.w * 0.6, self.rect.h * 0.2, self.rect.w * 0.15, self.rect.h * 0.05),
+        #                           (self.rect.w * 0.6, self.rect.h * 0.2, self.rect.w * 0.15, self.rect.h * 0.05),
+        #                           '', '', 0.5,
+        #                           (255, 255, 255),
+        #                           (202, 219, 252),
+        #                           (0, 0, 0),
+        #                           (0, 0, 0),
+        #                           (102, 153, 255),
+        #                           (0, 0, 255),
+        #                           (self.rect.w * 0.05 + self.rect.h * 0.05) * 0.01,
+        #                           0.4,
+        #                           (self.rect.w * 0.05 + self.rect.h * 0.05) * 0.01,
+        #                           0.4,
+        #                           real_pos=numpy.array(self.rect.topleft) + numpy.array(
+        #                               (self.rect.w * 0.6, self.rect.h * 0.2)),
+        #                           max_len=3
+        #                           )
+        #
+        # self.TextBoxLabel2 = Label(
+        #     self.parent,
+        #     (self.rect.w * 0.1, self.rect.h * 0.2, self.rect.w * 0.4, self.rect.h * 0.05),
+        #     (self.rect.w * 0.1, self.rect.h * 0.2, self.rect.w * 0.4, self.rect.h * 0.05),
+        #     0.5,
+        #     'Обхват талии',
+        #     self.background,
+        #     self.background,
+        #     (255, 255, 255),
+        #     (255, 255, 255),
+        #     real_pos=numpy.array(self.rect.topleft) + numpy.array(
+        #         (self.rect.w * 0.1, self.rect.h * 0.2))
+        # )
+        #
+        # self.TextBox2 = TextInput(self,
+        #                           (self.rect.w * 0.6, self.rect.h * 0.2, self.rect.w * 0.15, self.rect.h * 0.05),
+        #                           (self.rect.w * 0.6, self.rect.h * 0.2, self.rect.w * 0.15, self.rect.h * 0.05),
+        #                           '', '', 0.5,
+        #                           (255, 255, 255),
+        #                           (202, 219, 252),
+        #                           (0, 0, 0),
+        #                           (0, 0, 0),
+        #                           (102, 153, 255),
+        #                           (0, 0, 255),
+        #                           (self.rect.w * 0.05 + self.rect.h * 0.05) * 0.01,
+        #                           0.4,
+        #                           (self.rect.w * 0.05 + self.rect.h * 0.05) * 0.01,
+        #                           0.4,
+        #                           real_pos=numpy.array(self.rect.topleft) + numpy.array(
+        #                               (self.rect.w * 0.6, self.rect.h * 0.2)),
+        #                           max_len=3
+        #                           )
+        # self.TextBoxLabel2_2 = Label(
+        #     self.parent,
+        #     (self.rect.w * 0.77, self.rect.h * 0.2, self.rect.w * 0.15, self.rect.h * 0.05),
+        #     (0, 0, self.rect.w * 0.15, self.rect.h * 0.05),
+        #     0.5,
+        #     'mm',
+        #     self.background,
+        #     self.background,
+        #     (255, 255, 255),
+        #     (255, 255, 255),
+        #     real_pos=numpy.array(self.rect.topleft) + numpy.array(
+        #         (self.rect.w * 0.77, self.rect.h * 0.2))
+        # )
+        #
+        # self.TextBoxLabel3 = Label(
+        #     self.parent,
+        #     (self.rect.w * 0.1, self.rect.h * 0.3, self.rect.w * 0.4, self.rect.h * 0.05),
+        #     (0, 0, self.rect.w * 0.4, self.rect.h * 0.05),
+        #     0.5,
+        #     'Обхват низа корсета',
+        #     self.background,
+        #     self.background,
+        #     (255, 255, 255),
+        #     (255, 255, 255),
+        #     real_pos=numpy.array(self.rect.topleft) + numpy.array(
+        #         (self.rect.w * 0.1, self.rect.h * 0.3))
+        # )
+        #
+        # self.TextBox3 = TextInput(self,
+        #                           (self.rect.w * 0.6, self.rect.h * 0.3, self.rect.w * 0.15, self.rect.h * 0.05),
+        #                           (self.rect.w * 0.6, self.rect.h * 0.3, self.rect.w * 0.15, self.rect.h * 0.05),
+        #                           '', '', 0.5,
+        #                           (255, 255, 255),
+        #                           (202, 219, 252),
+        #                           (0, 0, 0),
+        #                           (0, 0, 0),
+        #                           (102, 153, 255),
+        #                           (0, 0, 255),
+        #                           (self.rect.w * 0.05 + self.rect.h * 0.05) * 0.01,
+        #                           0.4,
+        #                           (self.rect.w * 0.05 + self.rect.h * 0.05) * 0.01,
+        #                           0.4,
+        #                           real_pos=numpy.array(self.rect.topleft) + numpy.array(
+        #                               (self.rect.w * 0.6, self.rect.h * 0.3)),
+        #                           max_len=3
+        #                           )
+        # self.TextBoxLabel3_2 = Label(
+        #     self.parent,
+        #     (self.rect.w * 0.77, self.rect.h * 0.3, self.rect.w * 0.15, self.rect.h * 0.05),
+        #     (0, 0, self.rect.w * 0.15, self.rect.h * 0.05),
+        #     0.5,
+        #     'mm',
+        #     self.background,
+        #     self.background,
+        #     (255, 255, 255),
+        #     (255, 255, 255),
+        #     real_pos=numpy.array(self.rect.topleft) + numpy.array(
+        #         (self.rect.w * 0.77, self.rect.h * 0.3))
+        # )
+        #
+        # self.TextBoxLabel4 = Label(
+        #     self.parent,
+        #     (self.rect.w * 0.1, self.rect.h * 0.4, self.rect.w * 0.4, self.rect.h * 0.05),
+        #     (0, 0, self.rect.w * 0.4, self.rect.h * 0.05),
+        #     0.5,
+        #     'Высота основания груди',
+        #     self.background,
+        #     self.background,
+        #     (255, 255, 255),
+        #     (255, 255, 255),
+        #     real_pos=numpy.array(self.rect.topleft) + numpy.array(
+        #         (self.rect.w * 0.1, self.rect.h * 0.4))
+        # )
+        #
+        # self.TextBox4 = TextInput(self,
+        #                           (self.rect.w * 0.6, self.rect.h * 0.4, self.rect.w * 0.15, self.rect.h * 0.05),
+        #                           (0, 0, self.rect.w * 0.15, self.rect.h * 0.05),
+        #                           '', '', 0.5,
+        #                           (255, 255, 255),
+        #                           (202, 219, 252),
+        #                           (0, 0, 0),
+        #                           (0, 0, 0),
+        #                           (102, 153, 255),
+        #                           (0, 0, 255),
+        #                           (self.rect.w * 0.05 + self.rect.h * 0.05) * 0.01,
+        #                           0.4,
+        #                           (self.rect.w * 0.05 + self.rect.h * 0.05) * 0.01,
+        #                           0.4,
+        #                           real_pos=numpy.array(self.rect.topleft) + numpy.array(
+        #                               (self.rect.w * 0.6, self.rect.h * 0.4)),
+        #                           max_len=3
+        #                           )
+        # self.TextBoxLabel4_2 = Label(
+        #     self.parent,
+        #     (self.rect.w * 0.77, self.rect.h * 0.4, self.rect.w * 0.15, self.rect.h * 0.05),
+        #     (0, 0, self.rect.w * 0.15, self.rect.h * 0.05),
+        #     0.5,
+        #     'mm',
+        #     self.background,
+        #     self.background,
+        #     (255, 255, 255),
+        #     (255, 255, 255),
+        #     real_pos=numpy.array(self.rect.topleft) + numpy.array(
+        #         (self.rect.w * 0.77, self.rect.h * 0.4))
+        # )
+        # self.TextBoxLabel5 = Label(
+        #     self.parent,
+        #     (self.rect.w * 0.1, self.rect.h * 0.5, self.rect.w * 0.4, self.rect.h * 0.05),
+        #     (0, 0, self.rect.w * 0.4, self.rect.h * 0.05),
+        #     0.5,
+        #     'Высота бока вверх',
+        #     self.background,
+        #     self.background,
+        #     (255, 255, 255),
+        #     (255, 255, 255),
+        #     real_pos=numpy.array(self.rect.topleft) + numpy.array(
+        #         (self.rect.w * 0.1, self.rect.h * 0.5))
+        # )
+        #
+        # self.TextBox5 = TextInput(self,
+        #                           (self.rect.w * 0.6, self.rect.h * 0.5, self.rect.w * 0.15, self.rect.h * 0.05),
+        #                           (0, 0, self.rect.w * 0.15, self.rect.h * 0.05),
+        #                           '', '', 0.5,
+        #                           (255, 255, 255),
+        #                           (202, 219, 252),
+        #                           (0, 0, 0),
+        #                           (0, 0, 0),
+        #                           (102, 153, 255),
+        #                           (0, 0, 255),
+        #                           (self.rect.w * 0.05 + self.rect.h * 0.05) * 0.01,
+        #                           0.4,
+        #                           (self.rect.w * 0.05 + self.rect.h * 0.05) * 0.01,
+        #                           0.4,
+        #                           real_pos=numpy.array(self.rect.topleft) + numpy.array(
+        #                               (self.rect.w * 0.6, self.rect.h * 0.5)),
+        #                           max_len=3
+        #                           )
+        # self.TextBoxLabel5_2 = Label(
+        #     self.parent,
+        #     (self.rect.w * 0.77, self.rect.h * 0.5, self.rect.w * 0.15, self.rect.h * 0.05),
+        #     (0, 0, self.rect.w * 0.15, self.rect.h * 0.05),
+        #     0.5,
+        #     'mm',
+        #     self.background,
+        #     self.background,
+        #     (255, 255, 255),
+        #     (255, 255, 255),
+        #     real_pos=numpy.array(self.rect.topleft) + numpy.array(
+        #         (self.rect.w * 0.77, self.rect.h * 0.5))
+        # )
+        #
+        # self.TextBoxLabel6 = Label(
+        #     self.parent,
+        #     (self.rect.w * 0.1, self.rect.h * 0.6, self.rect.w * 0.4, self.rect.h * 0.05),
+        #     (0, 0, self.rect.w * 0.4, self.rect.h * 0.05),
+        #     0.5,
+        #     'Высота бока вниз',
+        #     self.background,
+        #     self.background,
+        #     (255, 255, 255),
+        #     (255, 255, 255),
+        #     real_pos=numpy.array(self.rect.topleft) + numpy.array(
+        #         (self.rect.w * 0.1, self.rect.h * 0.6))
+        # )
+        #
+        # self.TextBox6 = TextInput(self,
+        #                           (self.rect.w * 0.6, self.rect.h * 0.6, self.rect.w * 0.15, self.rect.h * 0.05),
+        #                           (0, 0, self.rect.w * 0.15, self.rect.h * 0.05),
+        #                           '', '', 0.5,
+        #                           (255, 255, 255),
+        #                           (202, 219, 252),
+        #                           (0, 0, 0),
+        #                           (0, 0, 0),
+        #                           (102, 153, 255),
+        #                           (0, 0, 255),
+        #                           (self.rect.w * 0.05 + self.rect.h * 0.05) * 0.01,
+        #                           0.4,
+        #                           (self.rect.w * 0.05 + self.rect.h * 0.05) * 0.01,
+        #                           0.4,
+        #                           real_pos=numpy.array(self.rect.topleft) + numpy.array(
+        #                               (self.rect.w * 0.6, self.rect.h * 0.6)),
+        #                           max_len=3
+        #                           )
+        # self.TextBoxLabel6_2 = Label(
+        #     self.parent,
+        #     (self.rect.w * 0.77, self.rect.h * 0.6, self.rect.w * 0.15, self.rect.h * 0.05),
+        #     (0, 0, self.rect.w * 0.15, self.rect.h * 0.05),
+        #     0.5,
+        #     'mm',
+        #     self.background,
+        #     self.background,
+        #     (255, 255, 255),
+        #     (255, 255, 255),
+        #     real_pos=numpy.array(self.rect.topleft) + numpy.array(
+        #         (self.rect.w * 0.77, self.rect.h * 0.6))
+        # )
+        # self.TextBoxLabel7 = Label(
+        #     self.parent,
+        #     (self.rect.w * 0.1, self.rect.h * 0.7, self.rect.w * 0.4, self.rect.h * 0.05),
+        #     (0, 0, self.rect.w * 0.4, self.rect.h * 0.05),
+        #     0.5,
+        #     'Утяжка',
+        #     self.background,
+        #     self.background,
+        #     (255, 255, 255),
+        #     (255, 255, 255),
+        #     real_pos=numpy.array(self.rect.topleft) + numpy.array(
+        #         (self.rect.w * 0.1, self.rect.h * 0.7))
+        # )
+        #
+        # self.TextBox7 = TextInput(self,
+        #                           (self.rect.w * 0.6, self.rect.h * 0.7, self.rect.w * 0.15, self.rect.h * 0.05),
+        #                           (0, 0, self.rect.w * 0.15, self.rect.h * 0.05),
+        #                           '', '', 0.5,
+        #                           (255, 255, 255),
+        #                           (202, 219, 252),
+        #                           (0, 0, 0),
+        #                           (0, 0, 0),
+        #                           (102, 153, 255),
+        #                           (0, 0, 255),
+        #                           (self.rect.w * 0.05 + self.rect.h * 0.05) * 0.01,
+        #                           0.4,
+        #                           (self.rect.w * 0.05 + self.rect.h * 0.05) * 0.01,
+        #                           0.4,
+        #                           real_pos=numpy.array(self.rect.topleft) + numpy.array(
+        #                               (self.rect.w * 0.6, self.rect.h * 0.7)),
+        #                           max_len=3
+        #                           )
+        # self.TextBoxLabel7_2 = Label(
+        #     self.parent,
+        #     (self.rect.w * 0.77, self.rect.h * 0.7, self.rect.w * 0.15, self.rect.h * 0.05),
+        #     (0, 0, self.rect.w * 0.15, self.rect.h * 0.05),
+        #     0.5,
+        #     'mm',
+        #     self.background,
+        #     self.background,
+        #     (255, 255, 255),
+        #     (255, 255, 255),
+        #     real_pos=numpy.array(self.rect.topleft) + numpy.array(
+        #         (self.rect.w * 0.77, self.rect.h * 0.7))
+        # )
+        self.elements = pygame.sprite.Group()
+        c = ['Основание груди', 'Обхват талии', 'Обхват низа корсета',
+             'Высота основания груди', 'Высота бока вверх', 'Высота бока вниз', 'Утяжка']
+        for n, name in enumerate(c, 1):
+            l1 = Label(
+                self.parent,
+                (self.rect.w * 0.1, self.rect.h * 0.1 * n - 1, self.rect.w * 0.4, self.rect.h * 0.05),
+                (0, 0, self.rect.w * 0.4, self.rect.h * 0.05),
+                0.5,
+                name,
+                self.background,
+                self.background,
+                (255, 255, 255),
+                (255, 255, 255),
+                real_pos=numpy.array(self.rect.topleft) + numpy.array(
+                    (self.rect.w * 0.1, self.rect.h * 0.1 * n - 1))
+            )
+            t = TextInput(
+                self,
+                (self.rect.w * 0.6, self.rect.h * 0.1 * n - 1, self.rect.w * 0.15, self.rect.h * 0.05),
+                (0, 0, self.rect.w * 0.15, self.rect.h * 0.05),
+                '', '', 0.5,
+                (255, 255, 255),
+                (202, 219, 252),
+                (0, 0, 0),
+                (0, 0, 0),
+                (102, 153, 255),
+                (0, 0, 255),
+                (self.rect.w * 0.05 + self.rect.h * 0.05) * 0.01,
+                0.4,
+                (self.rect.w * 0.05 + self.rect.h * 0.05) * 0.01,
+                0.4,
+                real_pos=numpy.array(self.rect.topleft) + numpy.array(
+                    (self.rect.w * 0.6, self.rect.h * 0.1 * n - 1)),
+                max_len=3
+            )
+            l2 = Label(
+                self.parent,
+                (self.rect.w * 0.77, self.rect.h * 0.1 * n - 1, self.rect.w * 0.15, self.rect.h * 0.05),
+                (0, 0, self.rect.w * 0.15, self.rect.h * 0.05),
+                0.5,
+                'mm',
+                self.background,
+                self.background,
+                (255, 255, 255),
+                (255, 255, 255),
+                real_pos=numpy.array(self.rect.topleft) + numpy.array(
+                    (self.rect.w * 0.77, self.rect.h * 0.1 * n - 1))
+            )
+            self.elements.add(l1, t, l2)
+
         self.OCButton = Button(
             self,
             (self.rect.w * 0.95, self.rect.h * 0.45, self.rect.w * 0.05, self.rect.h * 0.1),
@@ -656,37 +1076,43 @@ class DataPanel(pygame.sprite.Sprite):
             self.background,
             (255, 255, 255),
             (255, 255, 255),
-            # border=(self.rect.w * 0.05 + self.rect.h * 0.1) * 0.05,
-            # border_color=self.background,
-            # border_active=(self.rect.w * 0.05 + self.rect.h * 0.1) * 0.05,
-            # border_color_active=self.background,
             radius=0,
             radius_active=0,
             func=lambda s: s.parent.OpenClose(),
-            real_pos=numpy.array(self.rect.topleft)+numpy.array((self.rect.w * 0.95, self.rect.h * 0.45))
+            real_pos=numpy.array(self.rect.topleft) + numpy.array((self.rect.w * 0.95, self.rect.h * 0.45))
         )
-        self.selectable_elements = pygame.sprite.Group(self.OCButton, self.TextBox1)
+        # self.elements = pygame.sprite.Group(
+        #     self.TextBoxLabel1, self.TextBox1, self.TextBoxLabel1_2,
+        #     self.TextBoxLabel2, self.TextBox2, self.TextBoxLabel2_2,
+        #     self.TextBoxLabel3, self.TextBox3, self.TextBoxLabel3_2,
+        #     self.TextBoxLabel4, self.TextBox4, self.TextBoxLabel4_2,
+        #     self.TextBoxLabel5, self.TextBox5, self.TextBoxLabel5_2,
+        #     self.TextBoxLabel6, self.TextBox6, self.TextBoxLabel6_2,
+        #     self.TextBoxLabel7, self.TextBox7, self.TextBoxLabel7_2,
+        # )
 
     def update(self):
         self.events = self.parent.events
         if self.open:
-            self.image.blit(RoundedRect((0, 0, self.rect.w * 0.95, self.rect.h), self.background, self.radius, self.border, self.border_color), (0, 0))
-        self.selectable_elements.update()
-        self.selectable_elements.draw(self.image)
+            self.image.blit(
+                RoundedRect((0, 0, self.rect.w * 0.95, self.rect.h), self.background, self.radius, self.border,
+                            self.border_color), (0, 0))
+            self.elements.update()
+            self.elements.draw(self.image)
+        self.OCButton.update()
+        self.image.blit(self.OCButton.image, self.OCButton.rect.topleft)
 
     def OpenClose(self):
         self.image = pygame.Surface((self.rect.w, self.rect.h), pygame.SRCALPHA)
         if self.open:
             self.open = False
             self.OCButton.text = self.OCButton.text_active = '>'
-            self.OCButton.rect.x = self.border*8
+            self.OCButton.rect.x = self.border * 8
             self.OCButton.real_pos[0] = 0
         else:
             self.open = True
             self.OCButton.text = self.OCButton.text_active = '<'
             self.OCButton.rect.x = self.rect.w * 0.95
             self.OCButton.real_pos[0] = self.rect.w * 0.95 + self.rect.x
-            # self.OCButton.RectEdit(self.rect.w * 0.95, 0)
-            # numpy.array(self.rect.topleft) + numpy.array((self.rect.w * 0.95, self.rect.h * 0.45))
-            # self.rect.x = 0
         self.OCButton.UpdateImage()
+
