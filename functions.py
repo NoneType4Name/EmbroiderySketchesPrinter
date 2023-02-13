@@ -181,6 +181,7 @@ def DrawSketch(OG, OT, ONK, VOG, VBU, VBD, Y, printer: Printer):
     VOG += 10
     billetW = 142
     billetH = 85
+    billetDifferencial = 12
     a4 = (297, 210)
     techno_padding = 5
     upper_padding = 18
@@ -188,7 +189,7 @@ def DrawSketch(OG, OT, ONK, VOG, VBU, VBD, Y, printer: Printer):
     list_count = math.ceil(W/printer.mmTOpx(a4[0])), math.ceil(H/printer.mmTOpx(a4[1]))
     image = Image.new('L', (W, H), 255)
     sketch = ImageDraw.Draw(image)
-    sketch.line(((0, printer.mmTOpx(upper_padding)), (0, printer.mmTOpx(VBU+VBD))), 0, printer.mmTOpx(1))
+    sketch.line(((0, printer.mmTOpx(upper_padding+billetDifferencial)), (0, printer.mmTOpx(upper_padding+billetH+VOG+VBD))), 0, printer.mmTOpx(1))
     sketch.line(((0, printer.mmTOpx(upper_padding+billetH)), (printer.mmTOpx(OG/2), printer.mmTOpx(upper_padding+billetH))), 0, printer.mmTOpx(1))
     sketch.line(((0, printer.mmTOpx(upper_padding+billetH+VOG)), (printer.mmTOpx(OG/2), printer.mmTOpx(upper_padding+billetH+VOG))), 0, printer.mmTOpx(1))
 
@@ -196,16 +197,15 @@ def DrawSketch(OG, OT, ONK, VOG, VBU, VBD, Y, printer: Printer):
     sketch.line(((printer.mmTOpx(OG*0.5-25), printer.mmTOpx(upper_padding)), (printer.mmTOpx(OG*0.5-25), printer.mmTOpx(upper_padding+billetH+VOG+VBD))), 0, printer.mmTOpx(1))
     sketch.line(((printer.mmTOpx(OG*0.5-25-34), printer.mmTOpx(upper_padding)), (printer.mmTOpx(OG*0.5-25-34), printer.mmTOpx(upper_padding+billetH+VOG+VBD))), 0, printer.mmTOpx(1))
 
-    sketch.line(((printer.mmTOpx((OG/4+5)/3), printer.mmTOpx(VOG+upper_padding)), printer.mmTOpx((OG/4+5)/3), printer.mmTOpx(VOG+VBD+upper_padding)), 0, printer.mmTOpx(1))
-    sketch.line(((printer.mmTOpx((OG/4+5)/3*2), printer.mmTOpx(VOG+upper_padding)), printer.mmTOpx((OG/4+5)/3*2), printer.mmTOpx(VOG+VBD+upper_padding)), 0, printer.mmTOpx(1))
-    sketch.line(((printer.mmTOpx((OG/4+5)), printer.mmTOpx(VOG+upper_padding)), printer.mmTOpx((OG/4+5)), printer.mmTOpx(VOG+VBD+upper_padding)), 0, printer.mmTOpx(1))
+    sketch.line(((printer.mmTOpx((OG/4+5)/3), printer.mmTOpx(upper_padding+billetH)), printer.mmTOpx((OG/4+5)/3), printer.mmTOpx(upper_padding+billetH+VOG+VBD)), 0, printer.mmTOpx(1))
+    sketch.line(((printer.mmTOpx((OG/4+5)/3*2), printer.mmTOpx(upper_padding+billetH)), printer.mmTOpx((OG/4+5)/3*2), printer.mmTOpx(upper_padding+billetH+VOG+VBD)), 0, printer.mmTOpx(1))
+    sketch.line(((printer.mmTOpx((OG/4+5)), printer.mmTOpx((upper_padding+billetH)-(VBU-VOG))), printer.mmTOpx((OG/4+5)), printer.mmTOpx(upper_padding+billetH+VOG+VBD)), 0, printer.mmTOpx(1))
 
-    sketch.line(((printer.mmTOpx((OG/4+5)+((OG/4-5)/3)), printer.mmTOpx(VOG+upper_padding)), printer.mmTOpx((OG/4+5)+((OG/4-5)/3)), printer.mmTOpx(VOG+VBD+upper_padding)), 0, printer.mmTOpx(1))
-    sketch.line(((printer.mmTOpx((OG/4+5)+((OG/4-5)/3*2)), printer.mmTOpx(VOG+upper_padding)), printer.mmTOpx((OG/4+5)+((OG/4-5)/3*2)), printer.mmTOpx(VOG+VBD+upper_padding)), 0, printer.mmTOpx(1))
-    sketch.line(((printer.mmTOpx((OG/4+5)+(OG/4-5)), printer.mmTOpx(VOG+upper_padding)), printer.mmTOpx((OG/4+5)+(OG/4-5)), printer.mmTOpx(VOG+VBD+upper_padding)), 0, printer.mmTOpx(1))
+    sketch.line(((printer.mmTOpx((OG/4+5)+((OG/4-5)/3)), printer.mmTOpx(upper_padding+billetH)), printer.mmTOpx((OG/4+5)+((OG/4-5)/3)), printer.mmTOpx(upper_padding+billetH+VOG+VBD)), 0, printer.mmTOpx(1))
+    sketch.line(((printer.mmTOpx((OG/4+5)+((OG/4-5)/3*2)), printer.mmTOpx(upper_padding+billetH)), printer.mmTOpx((OG/4+5)+((OG/4-5)/3*2)), printer.mmTOpx(upper_padding+billetH+VOG+VBD)), 0, printer.mmTOpx(1))
 
-    sketch.line(((0, printer.mmTOpx(upper_padding)),(printer.mmTOpx(10), printer.mmTOpx(upper_padding))), 0, printer.mmTOpx(1))
-    sketch.line(((printer.mmTOpx(10), printer.mmTOpx(upper_padding)), (printer.mmTOpx(10), printer.mmTOpx(5+upper_padding))), 0, printer.mmTOpx(1))
+    sketch.line(((0, printer.mmTOpx(upper_padding+billetDifferencial)),(printer.mmTOpx(10), printer.mmTOpx(billetDifferencial+upper_padding))), 0, printer.mmTOpx(1))
+    sketch.line(((printer.mmTOpx(10), printer.mmTOpx(upper_padding+billetDifferencial)), (printer.mmTOpx(10), printer.mmTOpx(upper_padding+billetDifferencial+5))), 0, printer.mmTOpx(1))
     a = (100, 62)
     w = printer.mmTOpx(billetW)
     h = printer.mmTOpx(billetH)
@@ -219,30 +219,45 @@ def DrawSketch(OG, OT, ONK, VOG, VBU, VBD, Y, printer: Printer):
     sketch.line(((w+x, 0), (w+x, printer.mmTOpx(18))), 0, printer.mmTOpx(1))
     sketch.line(((w+x, 0), (w+x+printer.mmTOpx(5), 0)), 0, printer.mmTOpx(1))
 
-    image.show()
+    a = (300, 70)
+    w = printer.mmTOpx(300)
+    h = printer.mmTOpx(70)
+    at_x = w/a[0]
+    at_y = h/a[1]
+    x, y = printer.mmTOpx(billetW+10+5), 0
+    xys = [*map(lambda xy: (xy[0]*at_x + x, xy[1] * at_y + y), ((0, 0), (165, 55), (300, 70)))]
+    bezier = make_bezier(xys)
+    points = bezier(ts)
+    sketch.line(points, 0, printer.mmTOpx(1))
 
+    image.show()
+# 215 -
+# 220 - 165 55 (300, 70)
+# 225 - 145 30 (300, 30)
 
 printer = Printer(GetDefaultPrinter())
-DrawSketch(760, 640, 840, 120, 200, 400, 5, printer)
+DrawSketch(760, 640, 840, 120, 220, 120, 5, printer)
 
 
 # def mmtpx(mm):
-#     return round((mm * 600) / 25.4)
+#     return round((mm * 243) / 25.4)
 #
 #
 # if __name__ == '__main__':
-#     w = printer.mmTOpx(142)
-#     h = printer.mmTOpx(85)
+#     a = (300, 100)
+#     w = printer.mmTOpx(300)
+#     h = printer.mmTOpx(100)
 #     at_x = w/a[0]
 #     at_y = h/a[1]
 #     im = Image.new('RGBA', (w, h), (255, 255, 255))
 #     draw = ImageDraw.Draw(im)
 #     ts = [t / 100.0 for t in range(101)]
 #
-#     # xys = [(0, 0), (80, 50), (230, 90), (300, 100)]  line
-#     xys = [*map(lambda xy: (xy[0]*at_x, xy[1] * at_y), ((0, 12), (5, 65), (50, 75), (90, 65), (100, 0)))]
-#     bezier = make_bezier(xys)
-#     points = bezier(ts)
+#     xys = [(0, 0), (80, 50), (230, 90), (300, 100)]  line
+    # xys = [*map(lambda xy: (xy[0]*at_x, xy[1] * at_y), ((0, 0), (80, 50), (230, 90), (300, 100)))]
+    # bezier = make_bezier(xys)
+    # points = bezier(ts)
+    #
+    # draw.line(points, fill='black', width=mmtpx(1))
+    # im.show()
 #
-#     draw.line(points, fill='black', width=mmtpx(1))
-#     im.save('test.png')
