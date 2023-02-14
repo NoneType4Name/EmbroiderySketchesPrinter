@@ -176,15 +176,71 @@ def pascal_row(n):
     return result
 
 
+def GetCommonPoints(points1, points2: (float, float)):
+    c = []
+    for i in range(len(points1)-1):
+        x1y1, x2y2 = points1[i], points1[i+1]
+        x3y3, x4y4 = points2
+        try:
+            x = ((x1y1[0]*x2y2[1]-x1y1[1]*x2y2[0])*(x3y3[0]-x4y4[0])-(x1y1[0]-x2y2[0])*(x3y3[0]*x4y4[1]-x3y3[1]*x4y4[0]) ) / ( (x1y1[0]-x2y2[0])*(x3y3[1]-x4y4[1])-(x1y1[1]-x2y2[1])*(x3y3[0]-x4y4[0]) )
+            y = ((x1y1[0]*x2y2[1]-x1y1[1]*x2y2[0])*(x3y3[1]-x4y4[1])-(x1y1[1]-x2y2[1])*(x3y3[0]*x4y4[1]-x3y3[1]*x4y4[0]) ) / ( (x1y1[0]-x2y2[0])*(x3y3[1]-x4y4[1])-(x1y1[1]-x2y2[1])*(x3y3[0]-x4y4[0]) )
+            c.append((x, y))
+        except ZeroDivisionError:
+            pass
+    return sorted(c)
+
+
 # 'Основание груди', 'Обхват талии', 'Обхват низа корсета', 'Высота основания груди', 'Высота бока вверх', 'Высота бока вниз', 'Утяжка'
 def DrawSketch(OG, OT, ONK, VOG, VBU, VBD, Y, printer: Printer):
     VOG += 10
     billetW = 142
     billetH = 85
-    billetDifferencial = 12
+    billetDifferencial = 17
     a4 = (297, 210)
     techno_padding = 5
     upper_padding = 18
+
+    image = Image.new('L', (printer.mmTOpx((OG/4 + 0.5)/3 + 20), printer.mmTOpx(billetH+VOG+VBD+20)), 255)
+    sketch = ImageDraw.Draw(image)
+    sketch.line(((0, 0),(0, printer.mmTOpx(billetH+VOG+VBD+20))), 0, printer.mmTOpx(1))
+    sketch.line(((printer.mmTOpx(10), printer.mmTOpx(10)),(printer.mmTOpx(10), printer.mmTOpx(10+billetH+VOG+VBD))), 0, printer.mmTOpx(1))
+    sketch.line(((printer.mmTOpx((OG/4 + 0.5)/3 + 20), 0),(printer.mmTOpx((OG/4 + 0.5)/3 + 20), printer.mmTOpx(20+billetH+VOG+VBD))), 0, printer.mmTOpx(1))
+
+    sketch.line(((printer.mmTOpx(10), printer.mmTOpx(10)), (printer.mmTOpx(10+10), printer.mmTOpx(10))), 0, printer.mmTOpx(1))
+    sketch.line(((printer.mmTOpx(0), printer.mmTOpx(0)), (printer.mmTOpx(10+10+10), printer.mmTOpx(0))), 0, printer.mmTOpx(1))
+    sketch.line(((printer.mmTOpx(10+10), printer.mmTOpx(10)), (printer.mmTOpx(10+10), printer.mmTOpx(10+5))), 0, printer.mmTOpx(1))
+    sketch.line(((printer.mmTOpx(10+10+10), printer.mmTOpx(0)), (printer.mmTOpx(10+10+10), printer.mmTOpx(5))), 0, printer.mmTOpx(1))
+
+    a = (100, 62)
+    w = printer.mmTOpx(billetW)
+    h = printer.mmTOpx(billetH)
+    at_x = w/a[0]
+    at_y = h/a[1]
+    ts = [t / 100.0 for t in range(101)]
+    x, y = printer.mmTOpx(10+10), printer.mmTOpx(10-billetDifferencial+5)
+    bezier = make_bezier([*map(lambda xy: (xy[0]*at_x + x, xy[1] * at_y + y), ((0, 12), (5, 65), (50, 75), (90, 65), (100, 0)))])
+    points = bezier(ts)
+    sketch.line(points, 0, printer.mmTOpx(1))
+
+    w = printer.mmTOpx(billetW)
+    h = printer.mmTOpx(billetH)
+    at_x = w/a[0]
+    at_y = h/a[1]
+    xy = [(printer.mmTOpx((OG/4 + 0.5)/3 + 10), printer.mmTOpx(billetH-billetDifferencial+10)),(printer.mmTOpx((OG/4 + 0.5)/3 + 10), printer.mmTOpx(10+billetH+VOG+VBD))]
+    tg = 20/VOG
+    xy = GetCommonPoints(points, xy)[0], (printer.mmTOpx((OG/4 + 0.5)/3 + 10 - tg * (VOG+VBD)), printer.mmTOpx(10+billetH+VOG+VBD))
+    sketch.line(xy, 0, printer.mmTOpx(1))
+
+    # x, y = printer.mmTOpx(10+10), printer.mmTOpx(10-billetDifferencial+5)
+    # x, y = printer.mmTOpx(10+10+5), printer.mmTOpx(-billetDifferencial+5)
+    x, y = printer.mmTOpx(10+10+10), printer.mmTOpx(-billetDifferencial+5)
+    bezier = make_bezier([*map(lambda xy: (xy[0]*at_x + x, xy[1] * at_y + y), ((0, 12), (5, 65), (50, 75), (90, 65), (100, 0)))])
+    points = bezier(ts)
+    sketch.line(points, 0, printer.mmTOpx(1))
+    sketch.line(((printer.mmTOpx(10), printer.mmTOpx(10+billetH+VOG+VBD)), (printer.mmTOpx((OG/4 + 0.5)/3 + 10 - tg * (VOG+VBD)), printer.mmTOpx(10+billetH+VOG+VBD))), 0, printer.mmTOpx(1))
+    image.show()
+    exit()
+
     W, H = printer.mmTOpx(OG*0.5), printer.mmTOpx(upper_padding+billetH+VOG+VBD)
     list_count = math.ceil(W/printer.mmTOpx(a4[0])), math.ceil(H/printer.mmTOpx(a4[1]))
     image = Image.new('L', (W, H), 255)
@@ -200,9 +256,12 @@ def DrawSketch(OG, OT, ONK, VOG, VBU, VBD, Y, printer: Printer):
     sketch.line(((printer.mmTOpx((OG/4+5)/3), printer.mmTOpx(upper_padding+billetH)), printer.mmTOpx((OG/4+5)/3), printer.mmTOpx(upper_padding+billetH+VOG+VBD)), 0, printer.mmTOpx(1))
     sketch.line(((printer.mmTOpx((OG/4+5)/3*2), printer.mmTOpx(upper_padding+billetH)), printer.mmTOpx((OG/4+5)/3*2), printer.mmTOpx(upper_padding+billetH+VOG+VBD)), 0, printer.mmTOpx(1))
     sketch.line(((printer.mmTOpx((OG/4+5)), printer.mmTOpx((upper_padding+billetH)-(VBU-VOG))), printer.mmTOpx((OG/4+5)), printer.mmTOpx(upper_padding+billetH+VOG+VBD)), 0, printer.mmTOpx(1))
+    sketch.line(((printer.mmTOpx((OG/4+5)+((OG/4-5-25-34)/2)), printer.mmTOpx(upper_padding+billetH)), printer.mmTOpx((OG/4+5)+((OG/4-5-25-34)/2)), printer.mmTOpx(upper_padding+billetH+VOG+VBD)), 0, printer.mmTOpx(1))
+
 
     sketch.line(((printer.mmTOpx((OG/4+5)+((OG/4-5)/3)), printer.mmTOpx(upper_padding+billetH)), printer.mmTOpx((OG/4+5)+((OG/4-5)/3)), printer.mmTOpx(upper_padding+billetH+VOG+VBD)), 0, printer.mmTOpx(1))
     sketch.line(((printer.mmTOpx((OG/4+5)+((OG/4-5)/3*2)), printer.mmTOpx(upper_padding+billetH)), printer.mmTOpx((OG/4+5)+((OG/4-5)/3*2)), printer.mmTOpx(upper_padding+billetH+VOG+VBD)), 0, printer.mmTOpx(1))
+
 
     sketch.line(((0, printer.mmTOpx(upper_padding+billetDifferencial)),(printer.mmTOpx(10), printer.mmTOpx(billetDifferencial+upper_padding))), 0, printer.mmTOpx(1))
     sketch.line(((printer.mmTOpx(10), printer.mmTOpx(upper_padding+billetDifferencial)), (printer.mmTOpx(10), printer.mmTOpx(upper_padding+billetDifferencial+5))), 0, printer.mmTOpx(1))
@@ -218,6 +277,29 @@ def DrawSketch(OG, OT, ONK, VOG, VBU, VBD, Y, printer: Printer):
     sketch.line(points, 0, printer.mmTOpx(1))
     sketch.line(((w+x, 0), (w+x, printer.mmTOpx(18))), 0, printer.mmTOpx(1))
     sketch.line(((w+x, 0), (w+x+printer.mmTOpx(5), 0)), 0, printer.mmTOpx(1))
+    tg = 20/VOG
+    xys1 = [(printer.mmTOpx((OG/4+5)/3+5), printer.mmTOpx(upper_padding+billetH-5/tg)),(printer.mmTOpx((OG/4+5)/3-(tg*(VOG+VBD))), printer.mmTOpx(upper_padding+billetH+VOG+VBD))]
+    xys1[0] = GetCommonPoints(points, xys1)
+    sketch.line(xys1, 0, printer.mmTOpx(1))
+    xys2 = [(printer.mmTOpx((OG/4+5)/3*2+20), printer.mmTOpx(upper_padding+billetH-20/tg)),(printer.mmTOpx((OG/4+5)/3*2-(tg*(VOG+VBD))), printer.mmTOpx(upper_padding+billetH+VOG+VBD))]
+    xys2[0] = GetCommonPoints(points, xys2)
+    sketch.line(xys2, 0, printer.mmTOpx(1))
+
+    a = (300, 70)
+    w = printer.mmTOpx(300)
+    h = printer.mmTOpx(70)
+    at_x = w/a[0]
+    at_y = h/a[1]
+    x, y = printer.mmTOpx(billetW+10+5), 0
+    xys = [*map(lambda xy: (xy[0]*at_x + x, xy[1] * at_y + y), ((0, 0), (165, 55), (300, 70)))]
+    bezier = make_bezier(xys)
+    points = bezier(ts)
+    sketch.line(points, 0, printer.mmTOpx(1))
+
+    image.show()
+# 215 -
+# 220 - 165 55 (300, 70)
+# 225 - 145 30 (300, 30)
 
     a = (300, 70)
     w = printer.mmTOpx(300)
