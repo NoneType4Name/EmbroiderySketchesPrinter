@@ -12,7 +12,6 @@ import win32api
 import win32print
 import win32process
 
-import GUI
 from constants import *
 from screeninfo import get_monitors
 from PIL import Image, ImageWin, ImageDraw, ImageFont
@@ -192,6 +191,35 @@ def GetCommonPoints(points1, points2: (float, float)):
     return sorted(c)
 
 
+def GetCommonPointsForBezierCurve(points1, points2):
+    for i in range(len(points1)-(1 if len(points1)-1 else 0)):
+        x1, y1, x2, y2 = points1[i][0], points1[i][1], points1[i+1][0], points1[i+1][1]
+        x3, y3, x4, y4 = points2[0][0], points2[0][1], points2[1][0], points2[1][1]
+        if x1 > x2:
+            x1, x2 = x2, x1
+            y1, y2 = y2, y1
+        if x3 > x4:
+            x3, x4 = x4, x3
+            y3, y4 = y4, y3
+
+        if y2 == y1 or x1 == x2:
+            k1 = 0
+        else:
+            k1 = (y2 - y1) / (x2 - x1)
+
+        if y3 == y4 or x4 == x3:
+            k2 = 0
+        else:
+            k2 = (y4 - y3) / (x4 - x3)
+
+        b1 = y1 - k1 * x1
+        b2 = y3 - k2 * x3
+        x = (b2 - b1) / (k1 - k2)
+        y = k1*x+b1
+        if x1 <= x <= x2 and y1 <= y <= y2:
+            return x, y
+
+
 # 'Основание груди', 'Обхват талии', 'Обхват низа корсета', 'Высота основания груди', 'Высота бока вверх', 'Высота бока вниз', 'Утяжка'
 
 class DrawSketch:
@@ -237,12 +265,14 @@ class DrawSketch:
 
         xy = [(self.printer.mmTOpx((self.OG / 4 + 0.5) / 3 + self.techno_padding), self.printer.mmTOpx(self.billetH - self.billetDifferential + self.techno_padding)),
               (self.printer.mmTOpx((self.OG / 4 + 0.5) / 3 + self.techno_padding), self.printer.mmTOpx(self.techno_padding + self.billetH + self.VOG + self.VBD))]
-        tg = 20 / self.VOG
+        tg = (20+(self.OG-(self.OT-self.Y))/2/3/2/2) / self.VOG
         xy = GetCommonPoints(points, xy)[0], (
         self.printer.mmTOpx((self.OG / 4 + 0.5) / 3 + self.techno_padding - tg * (self.VOG + self.VBD)), self.printer.mmTOpx(self.techno_padding + self.billetH + self.VOG + self.VBD))
         sketch.line(xy, 0, self.printer.mmTOpx(1))
-        points_new = [(GetCommonPoints((points[i], points[i + 1]), xy)[0]) for i in range(len(points) - 1)]
-        sketch.line(points[:points_new.index(sorted(points_new)[-1]) + 2], 0, self.printer.mmTOpx(1))
+
+        # points_new = GetCommonPoints([(GetCommonPoints((points[i], points[i + 1]), xy)[0]) for i in range(len(points) - 1)], xy)
+        curve_end = tuple(numpy.array(GetCommonPointsForBezierCurve(points, xy)) + (self.printer.mmTOpx(0.5), 0))
+        sketch.line((*points[:points.index(min(points, key=lambda v: tuple(abs(numpy.array(v)-numpy.array(curve_end)))))], curve_end), 0, self.printer.mmTOpx(1))
         _xy = list(xy[0])
         _xy = (_xy[0] + self.printer.mmTOpx(self.techno_padding), _xy[1] - self.printer.mmTOpx(self.techno_padding)), (self.printer.mmTOpx((self.OG / 4 + 0.5) / 3 + self.techno_padding - tg * (self.VOG + self.VBD) + self.techno_padding), self.printer.mmTOpx(self.techno_padding + self.billetH + self.VOG + self.VBD + self.techno_padding))
         sketch.line(_xy, 0, self.printer.mmTOpx(1))
@@ -261,12 +291,14 @@ class DrawSketch:
         sketch.line(((self.printer.mmTOpx(self.techno_padding+self.billetW*0.15), self.printer.mmTOpx(self.techno_padding+self.billetH)), (self.printer.mmTOpx(self.techno_padding+self.billetW*0.15), self.printer.mmTOpx(self.techno_padding+self.billetH*1.5))), 0, self.printer.mmTOpx(1))
         sketch.line(((self.printer.mmTOpx(self.techno_padding+self.billetW*0.15-5), self.printer.mmTOpx(self.techno_padding+self.billetH*1.3)), (self.printer.mmTOpx(self.techno_padding+self.billetW*0.15), self.printer.mmTOpx(self.techno_padding+self.billetH*1.5)), (self.printer.mmTOpx(self.techno_padding+self.billetW*0.15+5), self.printer.mmTOpx(self.techno_padding+self.billetH*1.3))), 0, self.printer.mmTOpx(1))
         sketch.text((self.printer.mmTOpx(self.techno_padding+self.billetW*0.15+5), self.printer.mmTOpx(self.techno_padding+self.billetH*1.5)), 'I', 100, font=self.font)
+        return image
 
-        image.show()
-        exit()
+    def SecondElement(self):
+        image = Image.new('L', (self.printer.mmTOpx((self.OG / 4 + 0.5) / 3 + self.techno_padding*2), self.printer.mmTOpx(self.billetH + self.VOG + self.VBD + self.techno_padding*2)), 255)
+        sketch = ImageDraw.Draw(image)
 
 
-Sketch = DrawSketch(760, 640, 840, 120, 220, 120, 5, Printer(GetDefaultPrinter()))
+Sketch = DrawSketch(OG=760, OT=640, ONK=840, VOG=120, VBU=220, VBD=120, Y=50, printer=Printer(GetDefaultPrinter()))
 Sketch.FirstElement()
 
 # W, H = printer.mmTOpx(OG*0.5), printer.mmTOpx(upper_padding+billetH+VOG+VBD)
