@@ -89,6 +89,8 @@ class Printer:
         self.printable_area = self._hDC.GetDeviceCaps(HORZRES), self._hDC.GetDeviceCaps(VERTRES)
         self.printer_size = self._hDC.GetDeviceCaps(PHYSICALWIDTH), self._hDC.GetDeviceCaps(PHYSICALHEIGHT)
         self.printer_dpi = self._hDC.GetDeviceCaps(LOGPIXELSX)
+        self.HORIZONTAL = True if self.printable_area[0] > self.printable_area[1] else False
+        self.glue_padding = self.mmTOpx(3)
 
     def mmTOpx(self, mm: int) -> int:
         """
@@ -98,18 +100,50 @@ class Printer:
         """
         return round((mm * self.printer_dpi) / 25.4)
 
+    def NewSketch(self, sketches, task_name):
+        all_images = []
+        remainderLastSketchW = 0
+
+        sketches = [Image.open(s) if s is str else s for s in sketches if type(s) in (str, Image.Image)] if not all(s is Image.Image for s in sketches) else sketches
+        # list_count_w = math.ceil((math.ceil(sum(s.size[0] for s in sketches) / self.printable_area[0]) * 2 * self.glue_padding + sum(s.size[0] for s in sketches))/self.printable_area[0])
+        w = self.printable_area[0] - self.glue_padding * 2
+        images_h = []
+        for sketch in sketches:
+            while w > 0:
+                sketch_h = sketch.size[1]
+                list_by_h = 0
+                while sketch_h > 0:
+                    if not len(images_h) or len(images_h) - 1 < list_by_h:
+                        images_h.append(Image.new('L', self.printable_area, 255))
+                        ImageDraw.Draw(images_h[list_by_h]).rectangle((0, 0, *self.printable_area), 255, 100, self.glue_padding)
+                    images_h[list_by_h].paste(sketch.crop((remainderLastSketchW, sketch.size[1] - sketch_h,
+                                                           sketch.size[0] if sketch.size[0] <= w else w,
+                                                           sketch.size[1] if sketch_h < self.printable_area[1] - self.glue_padding * 2 else self.printable_area[1] - self.glue_padding * 2)),
+                                              (self.printable_area[0] - self.glue_padding - w, self.glue_padding))
+                    sketch_h -= self.printable_area[0] - self.glue_padding * 2
+                    list_by_h += 1
+                w -= sketch.size[0] - remainderLastSketchW if remainderLastSketchW else sketch.size[0]
+                remainderLastSketchW = 0
+            else:
+                remainderLastSketchW = abs(w)
+                w = self.printable_area[0] - self.glue_padding * 2
+                all_images += images_h
+                images_h = []
+        # for n, im in enumerate(all_images):
+        #     im.save(str(n)+'.png')
+
     def newTask(self, image, task_name):
         if type(image) is str:
             self._print_image = Image.open(image)
         elif type(image) is Image.Image:
             self._print_image = image
         else:
-            raise TypeError(f'Unsupported type for image (type: {type(image)}')
+            raise TypeError(f'Unsupported type for image (type: {type(image)})')
 
-        self._print_image.rotate(90 if self._print_image.size[0] > self._print_image.size[1] else 0)
+        self._print_image = self._print_image.rotate(90 if self._print_image.size[0] > self._print_image.size[1] and self.HORIZONTAL else 0, fillcolor=255)
         self._hDC.StartDoc(task_name)
         self._hDC.StartPage()
-        ImageWin.Dib(self._print_image).draw(self._hDC.GetHandleOutput(), (0, 0, *self.printable_area))
+        ImageWin.Dib(self._print_image).draw(self._hDC.GetHandleOutput(), (0, 0, *image.size))
         self._hDC.EndPage()
         self._hDC.EndDoc()
         self._print_image = None
@@ -250,11 +284,11 @@ class DrawSketch:
 
         sketch.line(((self.printer.mmTOpx(self.techno_padding), self.printer.mmTOpx(self.techno_padding)), (self.printer.mmTOpx(self.techno_padding + 10), self.printer.mmTOpx(self.techno_padding))), 0,
                     self.printer.mmTOpx(1))
-        sketch.line(((self.printer.mmTOpx(0), self.printer.mmTOpx(0)), (self.printer.mmTOpx(self.techno_padding*2 + 10), self.printer.mmTOpx(0))), 0,
+        sketch.line(((self.printer.mmTOpx(0), self.printer.mmTOpx(0)), (self.printer.mmTOpx(self.techno_padding*2+10), self.printer.mmTOpx(0))), 0,
                     self.printer.mmTOpx(1))
         sketch.line(((self.printer.mmTOpx(self.techno_padding + 10), self.printer.mmTOpx(self.techno_padding)), (self.printer.mmTOpx(self.techno_padding + 10), self.printer.mmTOpx(self.techno_padding + 5))),
                     0, self.printer.mmTOpx(1))
-        sketch.line(((self.printer.mmTOpx(self.techno_padding*2+10), self.printer.mmTOpx(0)), (self.printer.mmTOpx(self.techno_padding*2+ 10), self.printer.mmTOpx(5))), 0, self.printer.mmTOpx(1))
+        sketch.line(((self.printer.mmTOpx(self.techno_padding*2+5*2), self.printer.mmTOpx(0)), (self.printer.mmTOpx(self.techno_padding*2+5*2), self.printer.mmTOpx(5))), 0, self.printer.mmTOpx(1))
 
         w_exemplar = 100
         h_exemplar = 62
@@ -270,19 +304,21 @@ class DrawSketch:
         self.printer.mmTOpx((self.OG / 4 + 0.5) / 3 + self.techno_padding - tg * (self.VOG + self.VBD)), self.printer.mmTOpx(self.techno_padding + self.billetH + self.VOG + self.VBD))
         sketch.line(xy, 0, self.printer.mmTOpx(1))
 
-        # points_new = GetCommonPoints([(GetCommonPoints((points[i], points[i + 1]), xy)[0]) for i in range(len(points) - 1)], xy)
         curve_end = tuple(numpy.array(GetCommonPointsForBezierCurve(points, xy)) + (self.printer.mmTOpx(0.5), 0))
         sketch.line((*points[:points.index(min(points, key=lambda v: tuple(abs(numpy.array(v)-numpy.array(curve_end)))))], curve_end), 0, self.printer.mmTOpx(1))
-        _xy = list(xy[0])
-        _xy = (_xy[0] + self.printer.mmTOpx(self.techno_padding), _xy[1] - self.printer.mmTOpx(self.techno_padding)), (self.printer.mmTOpx((self.OG / 4 + 0.5) / 3 + self.techno_padding - tg * (self.VOG + self.VBD) + self.techno_padding), self.printer.mmTOpx(self.techno_padding + self.billetH + self.VOG + self.VBD + self.techno_padding))
-        sketch.line(_xy, 0, self.printer.mmTOpx(1))
 
         x, y = self.printer.mmTOpx(self.techno_padding*2+10), self.printer.mmTOpx(-self.billetDifferential + 5)
-        bezier = make_bezier([*map(lambda cord: (cord[0] * (self.printer.mmTOpx(self.billetW)/w_exemplar) + x, cord[1] * (self.printer.mmTOpx(self.billetH)/h_exemplar) + y), ((0, 12), (5, 65), (50, 75), (90, 65), (100, 0)))])
+        bezier = make_bezier([*map(lambda cord: (cord[0] * (self.printer.mmTOpx(self.billetW) / w_exemplar) + x,
+                                                 cord[1] * (self.printer.mmTOpx(self.billetH) / h_exemplar) + y),
+                                   ((0, 12), (5, 70), (30, 65), (90, 80), (100, 0)))])
         points = bezier(ts)
         sketch.line(points, 0, self.printer.mmTOpx(1))
         sketch.line(((self.printer.mmTOpx(self.techno_padding), self.printer.mmTOpx(self.techno_padding + self.billetH + self.VOG + self.VBD)), (self.printer.mmTOpx((self.OG / 4 + 0.5) / 3 + self.techno_padding - tg * (self.VOG + self.VBD)), self.printer.mmTOpx(self.techno_padding + self.billetH + self.VOG + self.VBD))), 0,self.printer.mmTOpx(1))
         sketch.line((0, self.printer.mmTOpx(self.billetH + self.VOG + self.VBD + self.techno_padding*2), (self.printer.mmTOpx((self.OG / 4 + 0.5) / 3 + self.techno_padding*2 - tg * (self.VOG + self.VBD)), self.printer.mmTOpx(self.techno_padding*2 + self.billetH + self.VOG + self.VBD))), 0, self.printer.mmTOpx(1))
+        _xy = list(xy[0])
+        _xy = [(_xy[0] + self.printer.mmTOpx(self.techno_padding), _xy[1] - self.printer.mmTOpx(self.techno_padding)), (self.printer.mmTOpx((self.OG / 4 + 0.5) / 3 + self.techno_padding - tg * (self.VOG + self.VBD) + self.techno_padding), self.printer.mmTOpx(self.techno_padding + self.billetH + self.VOG + self.VBD + self.techno_padding))]
+        _xy[0] = GetCommonPointsForBezierCurve(points, _xy)
+        sketch.line(_xy, 0, self.printer.mmTOpx(1))
 
         line_xy = [(self.printer.mmTOpx(self.techno_padding), self.printer.mmTOpx(self.techno_padding + self.billetH + self.VOG)), (self.printer.mmTOpx((self.OG / 4 + 0.5) / 3 + self.techno_padding*2), self.printer.mmTOpx(self.techno_padding + self.billetH + self.VOG))]
         line_xy[1] = GetCommonPoints(xy, line_xy)[0]
@@ -291,6 +327,7 @@ class DrawSketch:
         sketch.line(((self.printer.mmTOpx(self.techno_padding+self.billetW*0.15), self.printer.mmTOpx(self.techno_padding+self.billetH)), (self.printer.mmTOpx(self.techno_padding+self.billetW*0.15), self.printer.mmTOpx(self.techno_padding+self.billetH*1.5))), 0, self.printer.mmTOpx(1))
         sketch.line(((self.printer.mmTOpx(self.techno_padding+self.billetW*0.15-5), self.printer.mmTOpx(self.techno_padding+self.billetH*1.3)), (self.printer.mmTOpx(self.techno_padding+self.billetW*0.15), self.printer.mmTOpx(self.techno_padding+self.billetH*1.5)), (self.printer.mmTOpx(self.techno_padding+self.billetW*0.15+5), self.printer.mmTOpx(self.techno_padding+self.billetH*1.3))), 0, self.printer.mmTOpx(1))
         sketch.text((self.printer.mmTOpx(self.techno_padding+self.billetW*0.15+5), self.printer.mmTOpx(self.techno_padding+self.billetH*1.5)), 'I', 100, font=self.font)
+        # image.show()
         return image
 
     def SecondElement(self):
@@ -299,7 +336,8 @@ class DrawSketch:
 
 
 Sketch = DrawSketch(OG=760, OT=640, ONK=840, VOG=120, VBU=220, VBD=120, Y=50, printer=Printer(GetDefaultPrinter()))
-Sketch.FirstElement()
+# Sketch.FirstElement()
+Sketch.printer.NewSketch([*[Sketch.FirstElement()]*10], 'Test')
 
 # W, H = printer.mmTOpx(OG*0.5), printer.mmTOpx(upper_padding+billetH+VOG+VBD)
 # list_count = math.ceil(W/printer.mmTOpx(a4[0])), math.ceil(H/printer.mmTOpx(a4[1]))
