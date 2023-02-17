@@ -100,7 +100,7 @@ class Printer:
         """
         return round((mm * self.printer_dpi) / 25.4)
 
-    def NewSketch(self, sketches, task_name):
+    def NewSketch(self, sketches, task_name, sketches_padding=1):
         all_images = []
         remainderLastSketchW = 0
 
@@ -122,15 +122,15 @@ class Printer:
                                               (self.printable_area[0] - self.glue_padding - w, self.glue_padding))
                     sketch_h -= self.printable_area[0] - self.glue_padding * 2
                     list_by_h += 1
-                w -= sketch.size[0] - remainderLastSketchW if remainderLastSketchW else sketch.size[0]
+                w -= sketch.size[0] - remainderLastSketchW if remainderLastSketchW else sketch.size[0] + self.mmTOpx(sketches_padding)
                 remainderLastSketchW = 0
             else:
                 remainderLastSketchW = abs(w)
                 w = self.printable_area[0] - self.glue_padding * 2
                 all_images += images_h
                 images_h = []
-        # for n, im in enumerate(all_images):
-        #     im.save(str(n)+'.png')
+        for n, im in enumerate(all_images):
+            im.save(DATAS_FOLDER_NAME+'/'+str(n)+'.png')
 
     def newTask(self, image, task_name):
         if type(image) is str:
@@ -280,7 +280,6 @@ class DrawSketch:
 
         sketch.line(((0, 0), (0, self.printer.mmTOpx(self.billetH + self.VOG + self.VBD + self.techno_padding*2))), 0, self.printer.mmTOpx(1))
         sketch.line(((self.printer.mmTOpx(self.techno_padding), self.printer.mmTOpx(self.techno_padding)), (self.printer.mmTOpx(self.techno_padding), self.printer.mmTOpx(self.techno_padding + self.billetH + self.VOG + self.VBD))),0, self.printer.mmTOpx(1))
-        sketch.line(((self.printer.mmTOpx((self.OG / 4 + 0.5) / 3 + self.techno_padding*2), 0), (self.printer.mmTOpx((self.OG / 4 + 0.5) / 3 + self.techno_padding*2), self.printer.mmTOpx(self.techno_padding * 2 + self.billetH + self.VOG + self.VBD))), 0, self.printer.mmTOpx(1))
 
         sketch.line(((self.printer.mmTOpx(self.techno_padding), self.printer.mmTOpx(self.techno_padding)), (self.printer.mmTOpx(self.techno_padding + 10), self.printer.mmTOpx(self.techno_padding))), 0,
                     self.printer.mmTOpx(1))
