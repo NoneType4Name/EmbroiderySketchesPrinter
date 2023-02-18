@@ -561,9 +561,9 @@ class TextInput(pygame.sprite.Sprite):
             self.image.blit(font,
                             (self.rect.w * self.left_padding - size[0] * 0.5, self.rect.h * 0.5 - size[1] * 0.5))
         if self.isCollide() and self.parent.parent.mouse_left_release:
-            self.active = True
+            self.Activate()
         elif not self.isCollide() and self.parent.parent.mouse_left_release:
-            self.active = False
+            self.Deactivate()
 
         if any(map(lambda e: e.type in (pygame.KEYDOWN, pygame.KEYUP, pygame.TEXTEDITING, pygame.TEXTINPUT),
                    self.parent.events)):
@@ -1018,7 +1018,8 @@ class DataPanel(pygame.sprite.Sprite):
         self.text_input_elements = pygame.sprite.Group()
         ru = ['Основание груди', 'Обхват талии', 'Обхват низа корсета',
               'Высота основания груди', 'Высота бока вверх', 'Высота бока вниз', 'Утяжка']
-        self.data = ['', '', '', '', '', '', '']
+        self.data = ['760', '640', '840', '120', '220', '120', '50']
+        self.input_text_active = 0
 
         for n, name in enumerate(ru, 1):
             l1 = Label(
@@ -1038,7 +1039,7 @@ class DataPanel(pygame.sprite.Sprite):
                 self,
                 (self.rect.w * 0.6, self.rect.h * 0.1 * n - 1, self.rect.w * 0.15, self.rect.h * 0.05),
                 (0, 0, self.rect.w * 0.15, self.rect.h * 0.05),
-                self.data[n-1], self.data[n-1], 0.5,
+                '', self.data[n-1], 0.5,
                 (255, 255, 255),
                 (202, 219, 252),
                 (0, 0, 0),
@@ -1052,9 +1053,14 @@ class DataPanel(pygame.sprite.Sprite):
                 real_pos=numpy.array(self.rect.topleft) + numpy.array(
                     (self.rect.w * 0.6, self.rect.h * 0.1 * n - 1)),
                 max_len=3,
-                func_deactivate=lambda s: s.parent.data.__setitem__(s.num, s.value)
+                func_activate=lambda s: setattr(s, 'last', s.value) or setattr(s, 'text', '') or setattr(s.parent, 'input_text_active', s.num),
+                func_deactivate=lambda s:
+                (setattr(s, 'value', s.last) if not s.value else False) or
+                setattr(s, 'text', s.value) or
+                s.parent.data.__setitem__(s.num, s.value)
             )
             t.num = n-1
+            t.last = t.value
             l2 = Label(
                 self.parent,
                 (self.rect.w * 0.77, self.rect.h * 0.1 * n - 1, self.rect.w * 0.15, self.rect.h * 0.05),
@@ -1105,6 +1111,12 @@ class DataPanel(pygame.sprite.Sprite):
                             self.border_color), (0, 0))
             self.elements.update()
             self.elements.draw(self.image)
+            if any(map(lambda e: e.type == pygame.KEYDOWN and e.key == pygame.K_TAB, self.events)):
+                if self.text_input_elements.sprites()[self.input_text_active].active:
+                    self.text_input_elements.sprites()[self.input_text_active].Deactivate()
+                    self.text_input_elements.sprites()[self.input_text_active + 1 if len(self.text_input_elements.sprites()) > self.input_text_active + 1 else 0].Activate()
+                else:
+                    self.text_input_elements.sprites()[0].Activate()
         self.OCButton.update()
         self.image.blit(self.OCButton.image, self.OCButton.rect.topleft)
 
