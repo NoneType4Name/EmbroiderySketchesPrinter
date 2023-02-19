@@ -359,6 +359,7 @@ class DrawSketch:
         w_exemplar = 100
         h_exemplar = 62
         ts = [t / 100.0 for t in range(101)]
+
         x, y = xy[0][0]-self.printer.mmTOpx((self.OG/4+5)/3-10), self.printer.mmTOpx(-self.billetDifferential)
         bezier = make_bezier(tuple(map(lambda cord: (
             cord[0] * (self.printer.mmTOpx(self.billetW)/w_exemplar) + x,
@@ -433,20 +434,32 @@ class DrawSketch:
 
     def ThirdElement(self):
         tg = 20 / self.VOG
+        tg2 = (20-(self.OG-(self.OT-self.Y))/2/3/2/2) / self.VOG
+        tg3 = (20+(self.OG-(self.OT-self.Y))/2/3/2/2) / self.VOG
+        tg4 = ((self.OG-(self.OT-self.Y))/2/3/2/2) / self.VOG
         w_exemplar = 100
         h_exemplar = 62
         ts = [t / 100.0 for t in range(101)]
-
         image = Image.new('RGBA', (self.printer.mmTOpx(self.techno_padding * 2 + (self.OG / 4 + 5) / 3 + ((self.ONK-self.OG)/2/3*2)), self.printer.mmTOpx(self.techno_padding * 2 + self.billetH + self.VOG + self.VBD)), (255, 255, 255))
         sketch = ImageDraw.Draw(image)
+        xy0 = [
+            (self.printer.mmTOpx(self.techno_padding + tg3 * self.VOG), self.printer.mmTOpx(self.techno_padding + self.billetH)),
+            (self.printer.mmTOpx(self.techno_padding + tg * self.VOG), self.printer.mmTOpx(self.techno_padding + self.billetH + self.VOG)),
+            (self.printer.mmTOpx(self.techno_padding), self.printer.mmTOpx(self.techno_padding + self.billetH + self.VOG + self.VBD))
+        ]
+        xy01 = [(xy0[0][0] - self.printer.mmTOpx(self.techno_padding), xy0[0][1] - self.printer.mmTOpx(self.techno_padding)),
+                (xy0[1][0] - self.printer.mmTOpx(self.techno_padding), xy0[1][1]),
+                (xy0[2][0] - self.printer.mmTOpx(self.techno_padding), xy0[2][1] + self.printer.mmTOpx(self.techno_padding))]
 
-        # x, y = self.printer.mmTOpx(self.techno_padding-((self.OG/4+5)/3*2-10)+), self.printer.mmTOpx(self.techno_padding)
-        # bezier = make_bezier(tuple(map(lambda cord: (
-        #     cord[0] * (self.printer.mmTOpx(self.billetW) / w_exemplar) + x,
-        #     cord[1] * (self.printer.mmTOpx(self.billetH) / h_exemplar) + y),
-        #                                ((0, 12), (5, 65), (50, 75), (90, 65), (100, 0)))))
-        # points0 = bezier(ts)
-        # sketch.line(points0, self.sketch_lines_color, self.printer.mmTOpx(1))
+        sketch.line(xy0, self.sketch_lines_color, self.printer.mmTOpx(1))
+        sketch.line(xy01, self.sketch_lines_color, self.printer.mmTOpx(1))
+        x, y = self.printer.mmTOpx(self.techno_padding-((self.OG/4+5)/3*2-10)+tg * (self.VOG + self.VBD)), self.printer.mmTOpx(self.techno_padding)
+        bezier = make_bezier(tuple(map(lambda cord: (
+            cord[0] * (self.printer.mmTOpx(self.billetW) / w_exemplar) + x,
+            cord[1] * (self.printer.mmTOpx(self.billetH) / h_exemplar) + y),
+                                       ((0, 12), (5, 65), (50, 75), (90, 65), (100, 0)))))
+        points0 = bezier(ts)
+        sketch.line(points0, self.sketch_lines_color, self.printer.mmTOpx(1))
 
 
         return image
@@ -455,7 +468,7 @@ class DrawSketch:
 Sketch = DrawSketch(OG=760, OT=640, ONK=850, VOG=120, VBU=220, VBD=120, Y=50, printer=Printer('monitorHDC'))
 # Sketch.FirstElement().show()
 # Sketch.SecondElement().show()
-# Sketch.ThirdElement().show()
+Sketch.ThirdElement().show()
 # Sketch.printer.NewSketch(Sketch.FirstElement())
 
 # W, H = printer.mmTOpx(OG*0.5), printer.mmTOpx(upper_padding+billetH+VOG+VBD)
