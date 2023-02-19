@@ -440,7 +440,7 @@ class DrawSketch:
         w_exemplar = 100
         h_exemplar = 62
         ts = [t / 100.0 for t in range(101)]
-        image = Image.new('RGBA', (self.printer.mmTOpx(self.techno_padding * 2 + (self.OG / 4 + 5) / 3 + ((self.ONK-self.OG)/2/3*2)), self.printer.mmTOpx(self.techno_padding * 2 + self.billetH + self.VOG + self.VBD)), (255, 255, 255))
+        image = Image.new('RGBA', (self.printer.mmTOpx(self.techno_padding * 2 + (self.OG / 4 + 5) / 3 + ((self.ONK-self.OG)/2/3*2) + tg * (self.VOG + self.VBD)), self.printer.mmTOpx(self.techno_padding * 2 + self.billetH + self.VOG + self.VBD)), (255, 255, 255))
         sketch = ImageDraw.Draw(image)
         xy0 = [
             (self.printer.mmTOpx(self.techno_padding + tg3 * self.VOG), self.printer.mmTOpx(self.techno_padding + self.billetH)),
@@ -450,17 +450,24 @@ class DrawSketch:
         xy01 = [(xy0[0][0] - self.printer.mmTOpx(self.techno_padding), xy0[0][1] - self.printer.mmTOpx(self.techno_padding)),
                 (xy0[1][0] - self.printer.mmTOpx(self.techno_padding), xy0[1][1]),
                 (xy0[2][0] - self.printer.mmTOpx(self.techno_padding), xy0[2][1] + self.printer.mmTOpx(self.techno_padding))]
-
-        sketch.line(xy0, self.sketch_lines_color, self.printer.mmTOpx(1))
-        sketch.line(xy01, self.sketch_lines_color, self.printer.mmTOpx(1))
         x, y = self.printer.mmTOpx(self.techno_padding-((self.OG/4+5)/3*2-10)+tg * (self.VOG + self.VBD)), self.printer.mmTOpx(self.techno_padding)
         bezier = make_bezier(tuple(map(lambda cord: (
             cord[0] * (self.printer.mmTOpx(self.billetW) / w_exemplar) + x,
             cord[1] * (self.printer.mmTOpx(self.billetH) / h_exemplar) + y),
                                        ((0, 12), (5, 65), (50, 75), (90, 65), (100, 0)))))
         points0 = bezier(ts)
-        sketch.line(points0, self.sketch_lines_color, self.printer.mmTOpx(1))
+        bezier = make_bezier(tuple(map(lambda cord: (
+            cord[0] * (self.printer.mmTOpx(self.billetW-self.techno_padding) / w_exemplar) + x,
+            cord[1] * (self.printer.mmTOpx(self.billetH-self.techno_padding) / h_exemplar) + y),
+                                       ((0, 12), (5, 65), (50, 75), (90, 65), (100, 0)))))
+        points1 = bezier(ts)
+        xy0[0] = max([i for i in GetCommonPoints(points0, xy0[:2]) if i[1] > 0])
+        xy01[0] = max([i for i in GetCommonPoints(points1, xy01[:2]) if i[1] > 0])
 
+        sketch.line(xy0, self.sketch_lines_color, self.printer.mmTOpx(1))
+        sketch.line(xy01, self.sketch_lines_color, self.printer.mmTOpx(1))
+        sketch.line((xy0[0], *points0[points0.index(min(points0, key=lambda v: tuple(abs(numpy.array(v)-numpy.array(xy0[0]))))):]), self.sketch_lines_color, self.printer.mmTOpx(1))
+        sketch.line((xy01[0], *points1[points1.index(min(points1, key=lambda v: tuple(abs(numpy.array(v)-numpy.array(xy01[0]))))):]), self.sketch_lines_color, self.printer.mmTOpx(1))
 
         return image
 
