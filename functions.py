@@ -368,17 +368,17 @@ class DrawSketch:
                (self.printer.mmTOpx((self.OG/4+5)/3), self.printer.mmTOpx(self.VOG+self.VBD+self.billetH))]
         common_point = [i for i in GetCommonPoints(points, xy2) if i[1] > 0][0]
         upper_padding = self.printer.mmTOpx(self.billetH) - common_point[1]
-        del xy, xy2, points, bezier, x, y
+        # del xy, xy2, points, bezier, x, y
 
-        image = Image.new('RGBA', (round(common_point[0]+self.printer.mmTOpx(self.techno_padding*2)),
-                                   round(upper_padding + self.printer.mmTOpx(self.VOG + self.VBD + self.techno_padding*2))), 255)
+        image = Image.new('RGBA', (round(common_point[0]+self.printer.mmTOpx(self.techno_padding)),
+                                   round(upper_padding + self.printer.mmTOpx(self.VOG + self.VBD + self.techno_padding*2))), (255, 255, 255))
         sketch = ImageDraw.Draw(image)
 
         tg2 = (20-(self.OG-(self.OT-self.Y))/2/3/2/2) / self.VOG
         tg3 = (20+(self.OG-(self.OT-self.Y))/2/3/2/2) / self.VOG
         xy0 = [(self.printer.mmTOpx(tg * (self.VOG + self.VBD) + self.techno_padding), self.printer.mmTOpx(self.techno_padding)),
                (self.printer.mmTOpx((tg * (self.VOG + self.VBD)-tg2 * self.VOG) + self.techno_padding), upper_padding + self.printer.mmTOpx(self.techno_padding + self.VOG)),
-               ((self.printer.mmTOpx(self.techno_padding + (self.OG-(self.OT-self.Y))/2/3/2/2)), upper_padding + self.printer.mmTOpx(self.techno_padding + self.VOG + self.VBD))]
+               (self.printer.mmTOpx(self.techno_padding), upper_padding + self.printer.mmTOpx(self.techno_padding + self.VOG + self.VBD))]
 
         x, y = xy0[0][0] - self.printer.mmTOpx((self.OG / 4 + 5) / 3 - 10), self.printer.mmTOpx(-self.billetDifferential-self.techno_padding)
         bezier = make_bezier(tuple(map(lambda cord: (
@@ -407,8 +407,8 @@ class DrawSketch:
                 (xy1[1][0] + self.printer.mmTOpx(self.techno_padding), xy1[1][1]),
                 (xy1[2][0] + self.printer.mmTOpx(self.techno_padding), xy1[2][1] + self.printer.mmTOpx(self.techno_padding))]
         xy1[0] = max([i for i in GetCommonPoints(points0, xy1[:2]) if i[1] > 0])
-        xy11[0] = max([i for i in GetCommonPoints(points1, xy11[:2]) if i[1] > 0])
-        xy2 = ((self.printer.mmTOpx(self.techno_padding + (self.OG-(self.OT-self.Y))/2/3/2/2), upper_padding + self.printer.mmTOpx(self.techno_padding + self.VOG + self.VBD)),
+        xy11[0] = xy1[0][0] + self.printer.mmTOpx(self.techno_padding), xy1[0][1] - self.printer.mmTOpx(self.techno_padding)
+        xy2 = ((self.printer.mmTOpx(self.techno_padding), upper_padding + self.printer.mmTOpx(self.techno_padding + self.VOG + self.VBD)),
                (self.printer.mmTOpx(self.techno_padding + (self.OG-(self.OT-self.Y))/2/3/2/2 + (self.OG / 4 + 5) / 3), upper_padding + self.printer.mmTOpx(self.techno_padding + self.VOG + self.VBD)))
         xy21 = [(xy2[0][0] - self.printer.mmTOpx(self.techno_padding), xy2[0][1] + self.printer.mmTOpx(self.techno_padding)),
                 (xy2[1][0] + self.printer.mmTOpx(self.techno_padding), xy2[1][1] + self.printer.mmTOpx(self.techno_padding))]
@@ -416,7 +416,7 @@ class DrawSketch:
                (self.printer.mmTOpx((tg * (self.VOG + self.VBD)-(tg3 * self.VOG)) + self.techno_padding + (self.OG / 4 + 5) / 3),upper_padding+self.printer.mmTOpx(self.techno_padding + self.VOG)))
 
         sketch.line((xy0[0], *points0[points0.index(min(points0, key=lambda v: tuple(abs(numpy.array(v)-numpy.array(xy0[0]))))):points0.index(min(points0, key=lambda v: tuple(abs(numpy.array(v)-numpy.array(xy1[0])))))], xy1[0]), self.sketch_lines_color, self.printer.mmTOpx(1))
-        sketch.line((xy01[0], *points1[points1.index(min(points1, key=lambda v: tuple(abs(numpy.array(v)-numpy.array(xy01[0]))))):points1.index(min(points1, key=lambda v: tuple(abs(numpy.array(v)-numpy.array(xy11[0])))))], xy11[0]), self.sketch_lines_color, self.printer.mmTOpx(1))
+        sketch.line((xy01[0], *points1[points1.index(min(points1, key=lambda v: tuple(abs(numpy.array(v)-numpy.array(xy0[0]))))):points1.index(min(points1, key=lambda v: tuple(abs(numpy.array(v)-numpy.array(xy1[0])))))], xy11[0]), self.sketch_lines_color, self.printer.mmTOpx(1))
         sketch.line(xy0, self.sketch_lines_color, self.printer.mmTOpx(1))
         sketch.line(xy01, self.sketch_lines_color, self.printer.mmTOpx(1))
         sketch.line(xy1, self.sketch_lines_color, self.printer.mmTOpx(1))
@@ -431,11 +431,28 @@ class DrawSketch:
         sketch.text((self.printer.mmTOpx(self.techno_padding + (tg * (self.VOG + self.VBD)-tg2 * self.VOG + (self.OG / 4 + 5) / 3 * 0.6)), upper_padding + self.printer.mmTOpx(self.techno_padding + self.VOG) * 0.8), 'II', self.sketch_lines_color, font=self.font)
         return image
 
-    # def ThirdElement(self):
+    def ThirdElement(self):
+        tg = 20 / self.VOG
+        w_exemplar = 100
+        h_exemplar = 62
+        ts = [t / 100.0 for t in range(101)]
+
+        image = Image.new('RGBA', (self.printer.mmTOpx(self.techno_padding * 2 + (self.OG / 4 + 5) / 3 + ((self.ONK-self.OG)/2/3*2)), self.printer.mmTOpx(self.techno_padding * 2 + self.billetH + self.VOG + self.VBD)), (255, 255, 255))
+        sketch = ImageDraw.Draw(image)
+
+        # x, y = self.printer.mmTOpx(self.techno_padding-((self.OG/4+5)/3*2-10)+), self.printer.mmTOpx(self.techno_padding)
+        # bezier = make_bezier(tuple(map(lambda cord: (
+        #     cord[0] * (self.printer.mmTOpx(self.billetW) / w_exemplar) + x,
+        #     cord[1] * (self.printer.mmTOpx(self.billetH) / h_exemplar) + y),
+        #                                ((0, 12), (5, 65), (50, 75), (90, 65), (100, 0)))))
+        # points0 = bezier(ts)
+        # sketch.line(points0, self.sketch_lines_color, self.printer.mmTOpx(1))
 
 
+        return image
 
-# Sketch = DrawSketch(OG=760, OT=640, ONK=840, VOG=120, VBU=220, VBD=120, Y=50, printer=Printer(GetDefaultPrinter()))
+
+Sketch = DrawSketch(OG=760, OT=640, ONK=850, VOG=120, VBU=220, VBD=120, Y=50, printer=Printer('monitorHDC'))
 # Sketch.FirstElement().show()
 # Sketch.SecondElement().show()
 # Sketch.ThirdElement().show()

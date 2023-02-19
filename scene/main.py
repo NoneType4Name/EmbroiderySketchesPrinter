@@ -112,8 +112,8 @@ class SceneMain:
         for i in images:
             im.paste(i, (x, h - i.size[1]))
             x += i.size[0]
-        if im.size[0] > self.size[0]:
-            im = im.resize((self.size[0], int(im.size[1] * (self.size[0] / im.size[0]))), Image.ANTIALIAS)
-        if im.size[1] > self.size[1]:
-            im = im.resize((int(im.size[0] * (self.size[1] / im.size[1])), self.size[1]), Image.ANTIALIAS)
+        # if im.size[0] > self.size[0]:
+        #     im = im.resize((self.size[0], int(im.size[1] * (self.size[0] / im.size[0]))), Image.ANTIALIAS)
+        # if im.size[1] > self.size[1]:
+        #     im = im.resize((int(im.size[0] * (self.size[1] / im.size[1])), self.size[1]), Image.ANTIALIAS)
         self.sketch = pygame.image.fromstring(im.tobytes(), im.size, im.mode)
