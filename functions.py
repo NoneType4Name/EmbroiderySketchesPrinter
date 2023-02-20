@@ -291,6 +291,8 @@ class DrawSketch:
             imgs.append(self.FirstElement())
         if 2 in elements:
             imgs.append(self.SecondElement())
+        if 3 in elements:
+            imgs.append(self.ThirdElement())
         return imgs
 
     def FirstElement(self):
@@ -372,7 +374,7 @@ class DrawSketch:
         # del xy, xy2, points, bezier, x, y
 
         image = Image.new('RGBA', (round(common_point[0]+self.printer.mmTOpx(self.techno_padding)),
-                                   round(upper_padding + self.printer.mmTOpx(self.VOG + self.VBD + self.techno_padding*2))), (255, 255, 255))
+                                   round(upper_padding + self.printer.mmTOpx(self.VOG + self.VBD + self.techno_padding*2))), (0, 0, 0, 0))
         sketch = ImageDraw.Draw(image)
 
         tg2 = (20-(self.OG-(self.OT-self.Y))/2/3/2/2) / self.VOG
@@ -433,24 +435,28 @@ class DrawSketch:
         return image
 
     def ThirdElement(self):
+        up_line = 18
         tg = 20 / self.VOG
         tg2 = (20-(self.OG-(self.OT-self.Y))/2/3/2/2) / self.VOG
         tg3 = (20+(self.OG-(self.OT-self.Y))/2/3/2/2) / self.VOG
         tg4 = ((self.OG-(self.OT-self.Y))/2/3/2/2) / self.VOG
+        tg_mid0 = ((self.OG-(self.OT-self.Y))/2/3/2) / (self.VOG - 10)
+        tg_mid1 = ((self.OG-(self.OT-self.Y))/2/3/2 + 5) / (self.VOG - 10)
         w_exemplar = 100
         h_exemplar = 62
         ts = [t / 100.0 for t in range(101)]
-        image = Image.new('RGBA', (self.printer.mmTOpx(self.techno_padding * 2 + (self.OG / 4 + 5) / 3 + ((self.ONK-self.OG)/2/3*2) + tg * (self.VOG + self.VBD)), self.printer.mmTOpx(self.techno_padding * 2 + self.billetH + self.VOG + self.VBD)), (255, 255, 255))
+        image = Image.new('RGBA', (self.printer.mmTOpx(self.techno_padding * 2 + (self.OG / 4 + 5) / 3 + ((self.ONK-self.OG)/2/3) + (tg * (self.VOG + self.VBD) - (self.OG-(self.OT-self.Y))/2/3/2/2)),
+                                   self.printer.mmTOpx(self.techno_padding * 2 + up_line + self.billetH + self.VOG + self.VBD)), (0, 0, 0, 0))
         sketch = ImageDraw.Draw(image)
         xy0 = [
-            (self.printer.mmTOpx(self.techno_padding + tg3 * self.VOG), self.printer.mmTOpx(self.techno_padding + self.billetH)),
-            (self.printer.mmTOpx(self.techno_padding + tg * self.VOG), self.printer.mmTOpx(self.techno_padding + self.billetH + self.VOG)),
-            (self.printer.mmTOpx(self.techno_padding), self.printer.mmTOpx(self.techno_padding + self.billetH + self.VOG + self.VBD))
+            (self.printer.mmTOpx(self.techno_padding + tg3 * self.VOG), self.printer.mmTOpx(self.techno_padding + up_line + self.billetH)),
+            (self.printer.mmTOpx(self.techno_padding + tg * self.VOG), self.printer.mmTOpx(self.techno_padding + up_line + self.billetH + self.VOG)),
+            (self.printer.mmTOpx(self.techno_padding), self.printer.mmTOpx(self.techno_padding + up_line + self.billetH + self.VOG + self.VBD))
         ]
         xy01 = [(xy0[0][0] - self.printer.mmTOpx(self.techno_padding), xy0[0][1] - self.printer.mmTOpx(self.techno_padding)),
                 (xy0[1][0] - self.printer.mmTOpx(self.techno_padding), xy0[1][1]),
                 (xy0[2][0] - self.printer.mmTOpx(self.techno_padding), xy0[2][1] + self.printer.mmTOpx(self.techno_padding))]
-        x, y = self.printer.mmTOpx(self.techno_padding-((self.OG/4+5)/3*2-10)+tg * (self.VOG + self.VBD)), self.printer.mmTOpx(self.techno_padding)
+        x, y = self.printer.mmTOpx(self.techno_padding-((self.OG/4+5)/3*2-10)+tg * (self.VOG + self.VBD)), self.printer.mmTOpx(self.techno_padding + up_line)
         bezier = make_bezier(tuple(map(lambda cord: (
             cord[0] * (self.printer.mmTOpx(self.billetW) / w_exemplar) + x,
             cord[1] * (self.printer.mmTOpx(self.billetH) / h_exemplar) + y),
@@ -464,18 +470,104 @@ class DrawSketch:
         xy0[0] = max([i for i in GetCommonPoints(points0, xy0[:2]) if i[1] > 0])
         xy01[0] = max([i for i in GetCommonPoints(points1, xy01[:2]) if i[1] > 0])
 
+        xy1 = [
+            (self.printer.mmTOpx(self.billetW) - abs(x), self.printer.mmTOpx(self.techno_padding + up_line)),
+            (self.printer.mmTOpx(self.billetW) - abs(x), self.printer.mmTOpx(self.techno_padding)),
+            (self.printer.mmTOpx(self.billetW + 5) - abs(x), self.printer.mmTOpx(self.techno_padding))
+        ]
+        xy11 = [(xy1[0][0] - self.printer.mmTOpx(self.techno_padding), xy1[0][1]),
+                (xy1[1][0] - self.printer.mmTOpx(self.techno_padding), xy1[1][1] - self.printer.mmTOpx(self.techno_padding)),
+                (xy1[2][0] + self.printer.mmTOpx(self.techno_padding), xy1[2][1] - self.printer.mmTOpx(self.techno_padding))
+                ]
+
+        _points = ((self.printer.mmTOpx((tg * (self.VOG + self.VBD) - (self.OG-(self.OT-self.Y))/2/3/2/2) + self.techno_padding + (self.OG / 4 + 5) / 3), self.printer.mmTOpx(self.techno_padding + up_line + self.billetH)),
+                   (self.printer.mmTOpx(self.techno_padding + tg * (self.VOG + self.VBD) - (self.OG-(self.OT-self.Y))/2/3/2/2 + ((self.OG / 4 + 5) / 3) - tg_mid1 * self.VOG), self.printer.mmTOpx(self.techno_padding + up_line + self.billetH + self.VOG - 10)),
+                   (self.printer.mmTOpx(self.techno_padding + tg * (self.VOG + self.VBD) - (self.OG-(self.OT-self.Y))/2/3/2/2 + ((self.OG / 4 + 5) / 3) - tg_mid0 * self.VOG), self.printer.mmTOpx(self.techno_padding + up_line + self.billetH + self.VOG)))
+
+        xy2_2 = make_bezier(_points)(ts)
+        xy2_21 = make_bezier((numpy.array(_points) + (self.printer.mmTOpx(self.techno_padding), 0)))(ts)
+
+        _points = [
+            (self.printer.mmTOpx(self.techno_padding + tg * (self.VOG + self.VBD) - (self.OG - (self.OT - self.Y)) / 2 / 3 / 2 / 2 + ((self.OG / 4 + 5) / 3) - tg_mid0 * self.VOG), self.printer.mmTOpx(self.techno_padding + up_line + self.billetH + self.VOG)),
+            (self.printer.mmTOpx(self.techno_padding + tg * (self.VOG + self.VBD) - (self.OG - (self.OT - self.Y)) / 2 / 3 / 2 / 2 + ((self.OG / 4 + 5) / 3) + ((self.ONK - self.OG) / 2 / 3)), self.printer.mmTOpx(self.techno_padding + up_line + self.billetH + self.VOG + self.VBD)),
+        ]
+        points2 = (_points[0], ((_points[0][0] + self.printer.mmTOpx(5) + _points[1][0] + self.printer.mmTOpx(5))/2, (_points[0][1] + _points[1][1])/2), _points[1])
+        points3 = ((points2[0][0] + self.printer.mmTOpx(self.techno_padding), points2[0][1]),
+                   (points2[1][0] + self.printer.mmTOpx(self.techno_padding), points2[1][1]),
+                   (points2[2][0] + self.printer.mmTOpx(self.techno_padding), points2[2][1] + self.printer.mmTOpx(self.techno_padding))
+                   )
+        xy2_3 = make_bezier(points2)(ts)
+        xy2_31 = make_bezier(points3)(ts)
+
+        xy3 = (
+            (self.printer.mmTOpx(self.techno_padding), self.printer.mmTOpx(self.techno_padding + up_line + self.billetH + self.VOG + self.VBD)),
+            (self.printer.mmTOpx(self.techno_padding + tg * (self.VOG + self.VBD) - (self.OG - (self.OT - self.Y)) / 2 / 3 / 2 / 2 + ((self.OG / 4 + 5) / 3) + ((self.ONK - self.OG) / 2 / 3)), self.printer.mmTOpx(self.techno_padding + up_line + self.billetH + self.VOG + self.VBD))
+        )
+        xy31 = (
+            (xy3[0][0] - self.printer.mmTOpx(self.techno_padding), xy3[0][1] + self.printer.mmTOpx(self.techno_padding)),
+            (xy3[1][0] + self.printer.mmTOpx(self.techno_padding), xy3[1][1] + self.printer.mmTOpx(self.techno_padding)))
+
+        _curve = make_bezier(tuple(map(lambda cord: (
+            cord[0] * (self.printer.mmTOpx(self.printer.mmTOpx(30)) / 300) + self.printer.mmTOpx(self.billetW + 5) - abs(x),
+            cord[1] * (self.printer.mmTOpx(self.printer.mmTOpx(7)) / 70) + self.printer.mmTOpx(self.techno_padding)),
+                                       ((0, 0), (165, 55), (300, 70)))))(ts)
+        _points = (
+            (self.printer.mmTOpx((tg * (self.VOG + self.VBD) - (self.OG-(self.OT-self.Y))/2/3/2/2) + self.techno_padding + (self.OG / 4 + 5) / 3 - tg_mid0 * (up_line + self.billetH)), self.printer.mmTOpx(self.techno_padding)),
+            (self.printer.mmTOpx((tg * (self.VOG + self.VBD) - (self.OG-(self.OT-self.Y))/2/3/2/2) + self.techno_padding + (self.OG / 4 + 5) / 3), self.printer.mmTOpx(self.techno_padding + up_line + self.billetH))
+        )
+        common_point = min([i for i in GetCommonPoints(_curve, _points) if i[1] > 0])
+
+        h_padding_line2 = common_point[1] - self.printer.mmTOpx(self.techno_padding)
+
+        xy2 = (
+            (self.printer.mmTOpx((tg * (self.VOG + self.VBD) - (self.OG-(self.OT-self.Y))/2/3/2/2) + self.techno_padding + (self.OG / 4 + 5) / 3) + tg_mid0 * (self.printer.mmTOpx(up_line + self.billetH) - h_padding_line2), self.printer.mmTOpx(self.techno_padding) + h_padding_line2),
+            (self.printer.mmTOpx((tg * (self.VOG + self.VBD) - (self.OG-(self.OT-self.Y))/2/3/2/2) + self.techno_padding + (self.OG / 4 + 5) / 3), self.printer.mmTOpx(self.techno_padding + up_line + self.billetH))
+        )
+        xy21 = (
+            (xy2[0][0] + self.printer.mmTOpx(self.techno_padding), xy2[0][1] - self.printer.mmTOpx(self.techno_padding)),
+            (xy2[1][0] + self.printer.mmTOpx(self.techno_padding), xy2[1][1])
+        )
+
+        xy4 = (
+            (self.printer.mmTOpx(self.billetW + 5) - abs(x), self.printer.mmTOpx(self.techno_padding)),
+            (self.printer.mmTOpx((tg * (self.VOG + self.VBD) - (self.OG - (self.OT - self.Y)) / 2 / 3 / 2 / 2) + self.techno_padding + (self.OG / 4 + 5) / 3) + tg_mid0 * (self.printer.mmTOpx(up_line + self.billetH) - h_padding_line2),self.printer.mmTOpx(self.techno_padding) + h_padding_line2)
+        )
+        xy41 = (
+            (xy4[0][0] + self.printer.mmTOpx(self.techno_padding), xy4[0][1] - self.printer.mmTOpx(self.techno_padding)),
+            (xy4[1][0] + self.printer.mmTOpx(self.techno_padding), xy4[1][1] - self.printer.mmTOpx(self.techno_padding)),
+        )
+
+        xy5 = (
+            (self.printer.mmTOpx(self.techno_padding + tg * self.VOG), self.printer.mmTOpx(self.techno_padding + up_line + self.billetH + self.VOG)),
+            (self.printer.mmTOpx(self.techno_padding + tg * (self.VOG + self.VBD) - (self.OG - (self.OT - self.Y)) / 2 / 3 / 2 / 2 + ((self.OG / 4 + 5) / 3) - tg_mid0 * self.VOG), self.printer.mmTOpx(self.techno_padding + up_line + self.billetH + self.VOG))
+        )
         sketch.line(xy0, self.sketch_lines_color, self.printer.mmTOpx(1))
         sketch.line(xy01, self.sketch_lines_color, self.printer.mmTOpx(1))
+        sketch.line(xy1, self.sketch_lines_color, self.printer.mmTOpx(1))
+        sketch.line(xy11, self.sketch_lines_color, self.printer.mmTOpx(1))
+        sketch.line(xy2, self.sketch_lines_color, self.printer.mmTOpx(1))
+        sketch.line(xy21, self.sketch_lines_color, self.printer.mmTOpx(1))
+        sketch.line(xy2_2, self.sketch_lines_color, self.printer.mmTOpx(1))
+        sketch.line(xy2_21, self.sketch_lines_color, self.printer.mmTOpx(1))
+        sketch.line(xy2_3, self.sketch_lines_color, self.printer.mmTOpx(1))
+        sketch.line(xy2_31, self.sketch_lines_color, self.printer.mmTOpx(1))
+        sketch.line(xy3, self.sketch_lines_color, self.printer.mmTOpx(1))
+        sketch.line(xy31, self.sketch_lines_color, self.printer.mmTOpx(1))
+        sketch.line(xy4, self.sketch_lines_color, self.printer.mmTOpx(1))
+        sketch.line(xy41, self.sketch_lines_color, self.printer.mmTOpx(1))
+        sketch.line(xy5, self.sketch_lines_color, self.printer.mmTOpx(1))
         sketch.line((xy0[0], *points0[points0.index(min(points0, key=lambda v: tuple(abs(numpy.array(v)-numpy.array(xy0[0]))))):]), self.sketch_lines_color, self.printer.mmTOpx(1))
         sketch.line((xy01[0], *points1[points1.index(min(points1, key=lambda v: tuple(abs(numpy.array(v)-numpy.array(xy01[0]))))):]), self.sketch_lines_color, self.printer.mmTOpx(1))
-
+        sketch.line(((self.printer.mmTOpx(self.techno_padding + (tg * (self.VOG + self.VBD) - (self.OG - (self.OT - self.Y)) / 2 / 3 / 2 / 2 + ((self.OG / 4 + 5) / 3) * 0.5 - tg_mid0 * self.VOG)), (self.printer.mmTOpx((self.techno_padding + up_line + self.billetH) + self.VOG * 0.2))), (self.printer.mmTOpx(self.techno_padding + (tg * (self.VOG + self.VBD) - (self.OG - (self.OT - self.Y)) / 2 / 3 / 2 / 2 + ((self.OG / 4 + 5) / 3) * 0.5 - tg_mid0 * self.VOG)), (self.printer.mmTOpx((self.techno_padding + up_line + self.billetH) + self.VOG * 0.5)))), self.sketch_lines_color, self.printer.mmTOpx(1))
+        sketch.line(((self.printer.mmTOpx(self.techno_padding + (tg * (self.VOG + self.VBD) - (self.OG - (self.OT - self.Y)) / 2 / 3 / 2 / 2 + ((self.OG / 4 + 5) / 3) * 0.4 - tg_mid0 * self.VOG)), (self.printer.mmTOpx((self.techno_padding + up_line + self.billetH) + self.VOG * 0.4))), (self.printer.mmTOpx(self.techno_padding + (tg * (self.VOG + self.VBD) - (self.OG - (self.OT - self.Y)) / 2 / 3 / 2 / 2 + ((self.OG / 4 + 5) / 3) * 0.5 - tg_mid0 * self.VOG)), (self.printer.mmTOpx((self.techno_padding + up_line + self.billetH) + self.VOG * 0.5))), (self.printer.mmTOpx(self.techno_padding + (tg * (self.VOG + self.VBD) - (self.OG - (self.OT - self.Y)) / 2 / 3 / 2 / 2 + ((self.OG / 4 + 5) / 3) * 0.6 - tg_mid0 * self.VOG)), (self.printer.mmTOpx((self.techno_padding + up_line + self.billetH) + self.VOG * 0.4)))), self.sketch_lines_color, self.printer.mmTOpx(1))
+        sketch.text((self.printer.mmTOpx(self.techno_padding + (tg * (self.VOG + self.VBD) - (self.OG - (self.OT - self.Y)) / 2 / 3 / 2 / 2 + ((self.OG / 4 + 5) / 3) * 0.5 - tg_mid0 * self.VOG)), (self.printer.mmTOpx((self.techno_padding + up_line + self.billetH) + self.VOG * 0.5))), 'III', self.sketch_lines_color, font=self.font)
         return image
 
 
-Sketch = DrawSketch(OG=760, OT=640, ONK=850, VOG=120, VBU=220, VBD=120, Y=50, printer=Printer('monitorHDC'))
+# Sketch = DrawSketch(OG=760, OT=640, ONK=850, VOG=120, VBU=220, VBD=120, Y=50, printer=Printer('monitorHDC'))
 # Sketch.FirstElement().show()
 # Sketch.SecondElement().show()
-Sketch.ThirdElement().show()
+# Sketch.ThirdElement().show()
 # Sketch.printer.NewSketch(Sketch.FirstElement())
 
 # W, H = printer.mmTOpx(OG*0.5), printer.mmTOpx(upper_padding+billetH+VOG+VBD)
