@@ -168,8 +168,15 @@ class Button(pygame.sprite.Sprite):
             self.rect.y += y
 
 
+def GetListsCounts(self, printer_name=None):
+    if printer_name is not None:
+        self.DrawSketch.printer = Printer(printer_name)
+    self.printer_label2.value = 'Листов к печати: {}'.format(len(self.DrawSketch.printer.NewSketch(self.DrawSketch.Elements(self.sketches))))
+
+
+
 class PrintWindow(pygame.sprite.Sprite):
-    def __init__(self, parent, rect, description, files, radius,
+    def __init__(self, parent, rect, description, metrics, sketches, radius,
                  description_color, description_background,
                  close_button_color, close_button_radius,
                  # button_color, button_border, button_text_color,
@@ -204,6 +211,10 @@ class PrintWindow(pygame.sprite.Sprite):
 
         self._printers = GetPrintersList()
         self._printer = self._printers.index(GetDefaultPrinter())
+        self.metrics = tuple(map(int, metrics))
+        self.sketches = sketches
+        self.DrawSketch = DrawSketch(*self.metrics, Printer(GetDefaultPrinter()))
+        self.updated_printer = False
 
         self.elements = pygame.sprite.Group()
         self.close_button = Button(
@@ -239,7 +250,7 @@ class PrintWindow(pygame.sprite.Sprite):
             (self.rect.w * 0.4, self.rect.h * 0.3, self.rect.w * 0.35, self.rect.h * 0.08),
             (self.rect.w * 0.4, self.rect.h * 0.3, self.rect.w * 0.35, self.rect.h * 0.08),
             0.5,
-            GetDefaultPrinter(),
+            self._printers[self._printer],
             (255, 255, 255),
             (202, 219, 252),
             (0, 0, 0),
@@ -271,7 +282,7 @@ class PrintWindow(pygame.sprite.Sprite):
             1,
             func=lambda _: (setattr(self, '_printer', (self._printer + (
                 1 if self._printer + 1 <= len(self._printers) - 1 else -self._printer)))) or setattr(
-                self.printer_name_label, 'value', self._printers[self._printer]),
+                self.printer_name_label, 'value', self._printers[self._printer]) or setattr(self, 'updated_printer', True),
             real_pos=numpy.array(self.rect.topleft) + numpy.array((self.rect.w * 0.8, self.rect.h * 0.3))
 
         )
@@ -295,7 +306,7 @@ class PrintWindow(pygame.sprite.Sprite):
             1,
             func=lambda _: (setattr(self, '_printer', (
                     self._printer - (1 if self._printer - 1 >= 0 else -(len(self._printers) - 1))))) or setattr(
-                self.printer_name_label, 'value', self._printers[self._printer]),
+                self.printer_name_label, 'value', self._printers[self._printer]) or setattr(self, 'updated_printer', True),
             real_pos=numpy.array(self.rect.topleft) + numpy.array((self.rect.w * 0.9, self.rect.h * 0.3)))
 
         self.printer_label3 = Label(
@@ -314,11 +325,12 @@ class PrintWindow(pygame.sprite.Sprite):
             (self.rect.w * 0.1, self.rect.h * 0.8, self.rect.w * 0.8, self.rect.h * 0.08),
             (self.rect.w * 0.1, self.rect.h * 0.8, self.rect.w * 0.8, self.rect.h * 0.08),
             0.25,
-            'Листов к печати: N',
+            'Постройка чертежа...',
             self.background,
             self.background,
             (255, 255, 255),
             (255, 255, 255))
+        threading.Thread(target=GetListsCounts, args=[self], daemon=True).start()
 
         self.cancelButton = Button(
             self.parent,
@@ -356,7 +368,7 @@ class PrintWindow(pygame.sprite.Sprite):
             .5,
             (self.rect.h * 0.08 * 2) * 0.04,
             .5,
-            func=lambda _: self.kill(),
+            func=lambda s: self.DrawSketch.printer.PrintAll(self.DrawSketch.printer.NewSketch(self.DrawSketch.Elements(self.sketches, (255, 255, 255)), 20), NAME_PRINT_PROCESS) or self.kill(),
             real_pos=numpy.array(self.rect.topleft) + numpy.array((self.rect.w * 0.75, self.rect.h * 0.8)))
 
         self._drag = False
@@ -374,6 +386,10 @@ class PrintWindow(pygame.sprite.Sprite):
             self.rect.w * 0.5 - font.get_size()[0] * 0.5, self.rect.h * 0.1 * 0.5 - font.get_size()[1] * 0.5))
         self.elements.update()
         self.selectable_elements.update()
+        if self.updated_printer:
+            self.updated_printer = False
+            self.printer_label2.value = 'Постройка чертежа...'
+            threading.Thread(target=GetListsCounts, args=[self, self.printer_name_label.value], daemon=True).start()
         if self.selected_item_num is not None:
             self.selectable_elements.sprites()[self.selected_item_num].collide = True
         self.elements.draw(self.image)
@@ -521,7 +537,7 @@ class TextInput(pygame.sprite.Sprite):
         self.active = False
         self.pos = len(self.value)
 
-    def update(self):
+    def update(self, parent):
         self.image = pygame.Surface((self.rect.w, self.rect.h), pygame.SRCALPHA)
         font = Font.render(self.value, pygame.Rect(*self.text_rect.topleft, self.text_rect.w - self.border * 2,
                                                    self.text_rect.h - self.border * 2), True, self.text_color)
@@ -531,7 +547,7 @@ class TextInput(pygame.sprite.Sprite):
         size = font.get_size()
         if self.active:
             if self.isCollide():
-                self.parent.parent.cursor = pygame.SYSTEM_CURSOR_IBEAM
+                parent.cursor = pygame.SYSTEM_CURSOR_IBEAM
             self.image.blit(
                 RoundedRect(self.rect, self.color_active, self.radius, self.border_active, self.border_color_active),
                 (0, 0))
@@ -553,21 +569,21 @@ class TextInput(pygame.sprite.Sprite):
         else:
             self.image.blit(RoundedRect(self.rect, self.color, self.radius, self.border, self.border_color), (0, 0))
             if self.isCollide():
-                self.parent.parent.cursor = pygame.SYSTEM_CURSOR_HAND
+                parent.cursor = pygame.SYSTEM_CURSOR_HAND
         if self.text:
             self.image.blit(font_active,
                             (self.rect.w * self.left_padding - size[0] * 0.5, self.rect.h * 0.5 - size[1] * 0.5))
         else:
             self.image.blit(font,
                             (self.rect.w * self.left_padding - size[0] * 0.5, self.rect.h * 0.5 - size[1] * 0.5))
-        if self.isCollide() and self.parent.parent.mouse_left_release:
+        if self.isCollide() and parent.mouse_left_release and not self.active:
             self.Activate()
-        elif not self.isCollide() and self.parent.parent.mouse_left_release:
+        elif not self.isCollide() and parent.mouse_left_release and self.active:
             self.Deactivate()
 
         if any(map(lambda e: e.type in (pygame.KEYDOWN, pygame.KEYUP, pygame.TEXTEDITING, pygame.TEXTINPUT),
-                   self.parent.events)):
-            for event in self.parent.events:
+                   parent.events)) and self.active:
+            for event in parent.events:
                 if self.active:
                     if event.type == pygame.KEYDOWN:
                         if event.key == pygame.K_BACKSPACE:
@@ -663,6 +679,74 @@ class TextInput(pygame.sprite.Sprite):
         self.func_deactivate(self)
 
 
+class Switch(pygame.sprite.Sprite):
+    def __init__(self, parent, rect, name, value, color, color_active, color_on, color_off, real_pos=None, func=None):
+        pygame.sprite.Sprite.__init__(self)
+        self.parent = parent
+        self.rect = pygame.Rect(rect)
+        self.image = pygame.Surface((self.rect.width, self.rect.height), pygame.SRCALPHA)
+        self.color = pygame.Color(color)
+        self.color_active = pygame.Color(color_active)
+        self.color_on = pygame.Color(color_on)
+        self.color_off = pygame.Color(color_off)
+        self.name = name
+        self.value = value
+        self.real_pos = real_pos
+        self.func = func if func else lambda s: s
+
+    def update(self, parent):
+        self.image = pygame.Surface((self.rect.w, self.rect.h), pygame.SRCALPHA)
+        if self.value:
+            self.image.blit(RoundedRect(self.rect, self.color_active, 1), (0, 0))
+            pygame.draw.circle(self.image, self.color_on, (self.rect.w / 2 + self.rect.h * 0.55, self.rect.h / 2),
+                               self.rect.h / 2 - self.rect.h * 0.1)
+        elif not self.value:
+            self.image.blit(RoundedRect(self.rect, self.color, 1), (0, 0))
+            pygame.draw.circle(self.image, self.color_off, (self.rect.w / 2 - self.rect.h / 2, self.rect.h / 2),
+                               self.rect.h / 2 - self.rect.h * 0.1)
+        if self.isCollide():
+            parent.cursor = pygame.SYSTEM_CURSOR_HAND
+            if parent.mouse_left_release:
+                self.value = not self.value
+                self.func(self)
+
+    def isCollide(self):
+        return pygame.Rect(*self.real_pos, self.rect.w, self.rect.h).collidepoint(
+            pygame.mouse.get_pos()) if self.real_pos is not None else self.rect.collidepoint(pygame.mouse.get_pos())
+
+    def RectEdit(self, x=0, y=0, real=False):
+        if real:
+            if self.real_pos is not None:
+                self.real_pos[0] += x
+                self.real_pos[1] += y
+        else:
+            self.rect.x += x
+            self.rect.y += y
+
+    def Function(self):
+        self.func(self)
+
+
+# lambda this: (setattr(this.parent, 'allowed_sketches', [*range(SKETCHES)]) if this.value else this.parent.allowed_sketches.clear()) if this.name is str else this.parent.allowed_sketches.append(this.name) if this.value else this.parent.allowed_sketches.remove(this.name)
+def IncludeExcludeElement(self):
+    self.parent.parent.updated_data = True
+    if type(self.name) is str:
+        if self.value:
+            self.parent.allowed_sketches = [*range(1, SKETCHES+1)]
+            tuple(setattr(i, 'value', True) for i in self.parent.allowed_sketches_elements)
+        else:
+            tuple(setattr(i, 'value', False) for i in self.parent.allowed_sketches_elements)
+            self.parent.allowed_sketches.clear()
+    else:
+        if self.value:
+            self.parent.allowed_sketches.append(self.name)
+            if sorted(self.parent.allowed_sketches) == [*range(1, SKETCHES+1)]:
+                self.parent.allowed_sketches_elements.sprites()[0].value = True
+        else:
+            self.parent.allowed_sketches.remove(self.name)
+            self.parent.allowed_sketches_elements.sprites()[0].value = False
+
+
 class DataPanel(pygame.sprite.Sprite):
     def __init__(self, parent, rect, background, radius=0.5, border=0, border_color=()):
         pygame.sprite.Sprite.__init__(self)
@@ -673,7 +757,6 @@ class DataPanel(pygame.sprite.Sprite):
         self.radius = radius
         self.border = border
         self.border_color = border_color
-        self.events = self.parent.events
 
         self.open = True
         # self.TextBoxLabel1 = Label(
@@ -1054,10 +1137,10 @@ class DataPanel(pygame.sprite.Sprite):
                     (self.rect.w * 0.6, self.rect.h * 0.1 * n - 1)),
                 max_len=3,
                 func_activate=lambda s: setattr(s, 'last', s.value) or setattr(s, 'text', '') or setattr(s.parent, 'input_text_active', s.num),
-                func_deactivate=lambda s:
-                (setattr(s, 'value', s.last) if not s.value else False) or
-                setattr(s, 'text', s.value) or
-                s.parent.data.__setitem__(s.num, s.value)
+                func_deactivate=lambda s: (setattr(s, 'value', s.last) if not s.value else
+                                           (setattr(s.parent.parent, 'updated_data', True) or setattr(s, 'last', s.value) if s.value != s.last else False)) or
+                                           setattr(s, 'text', s.value) or s.parent.data.__setitem__(s.num, s.value)
+
             )
             t.num = n-1
             t.last = t.value
@@ -1074,11 +1157,11 @@ class DataPanel(pygame.sprite.Sprite):
                 real_pos=numpy.array(self.rect.topleft) + numpy.array(
                     (self.rect.w * 0.77, self.rect.h * 0.1 * n - 1))
             )
-            self.elements.add(l1, t, l2)
+            self.elements.add(l1, l2)
             self.text_input_elements.add(t)
 
         self.OCButton = Button(
-            self,
+            self.parent,
             (self.rect.w * 0.95, self.rect.h * 0.45, self.rect.w * 0.05, self.rect.h * 0.1),
             (self.rect.w * 0.95, self.rect.h * 0.45, self.rect.w * 0.05, self.rect.h * 0.1),
             (self.rect.w * 0.95, self.rect.h * 0.45, self.rect.w * 0.05, self.rect.h * 0.1),
@@ -1090,9 +1173,40 @@ class DataPanel(pygame.sprite.Sprite):
             (255, 255, 255),
             radius=0,
             radius_active=0,
-            func=lambda s: s.parent.OpenClose(),
+            func=lambda s: self.OpenClose(),
             real_pos=numpy.array(self.rect.topleft) + numpy.array((self.rect.w * 0.95, self.rect.h * 0.45))
         )
+        self.allowed_sketches_elements = pygame.sprite.Group()
+        self.allowed_sketches = [*range(1, SKETCHES+1)]
+        sketches = ['Все', 'Элемент {}']
+        for s in range(SKETCHES+1):
+            label = Label(
+                self,
+                (self.rect.w * 0.1, self.rect.h * (0.78+(0.03 * s)), self.rect.w * 0.4, self.rect.h * 0.02),
+                (0, 0, self.rect.w * 0.4, self.rect.h * 0.02),
+                0.5,
+                sketches[1 if s else 0].format(s if s else None),
+                self.background,
+                self.background,
+                (255, 255, 255),
+                (255, 255, 255),
+                real_pos=numpy.array(self.rect.topleft) + numpy.array(
+                    (self.rect.w * 0.1, self.rect.h * (0.78+(0.03 * s))))
+            )
+            sw = Switch(self,
+                        (self.rect.w * 0.6, self.rect.h * (0.78+(0.03 * s)), self.rect.w * 0.1, self.rect.h * 0.02),
+                        s if s else 'all',
+                        True,
+                        (255, 255, 255),
+                        (202, 219, 252),
+                        (255, 255, 255),
+                        self.background,
+                        real_pos=numpy.array(self.rect.topleft) + numpy.array(
+                            (self.rect.w * 0.6, self.rect.h * (0.78+(0.03 * s)))),
+                        func=lambda this: IncludeExcludeElement(this))
+            self.allowed_sketches_elements.add(sw)
+            self.elements.add(label)
+
         # self.elements = pygame.sprite.Group(
         #     self.TextBoxLabel1, self.TextBox1, self.TextBoxLabel1_2,
         #     self.TextBoxLabel2, self.TextBox2, self.TextBoxLabel2_2,
@@ -1104,14 +1218,17 @@ class DataPanel(pygame.sprite.Sprite):
         # )
 
     def update(self):
-        self.events = self.parent.events
         if self.open:
             self.image.blit(
                 RoundedRect((0, 0, self.rect.w * 0.95, self.rect.h), self.background, self.radius, self.border,
                             self.border_color), (0, 0))
             self.elements.update()
+            self.text_input_elements.update(self.parent.parent)
+            self.allowed_sketches_elements.update(self.parent.parent)
             self.elements.draw(self.image)
-            if any(map(lambda e: e.type == pygame.KEYDOWN and e.key == pygame.K_TAB, self.events)):
+            self.text_input_elements.draw(self.image)
+            self.allowed_sketches_elements.draw(self.image)
+            if any(map(lambda e: e.type == pygame.KEYDOWN and e.key == pygame.K_TAB, self.parent.parent.events)):
                 if self.text_input_elements.sprites()[self.input_text_active].active:
                     self.text_input_elements.sprites()[self.input_text_active].Deactivate()
                     self.text_input_elements.sprites()[self.input_text_active + 1 if len(self.text_input_elements.sprites()) > self.input_text_active + 1 else 0].Activate()

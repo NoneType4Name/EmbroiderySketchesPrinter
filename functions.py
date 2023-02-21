@@ -1,18 +1,18 @@
-﻿import ctypes
-import math
+﻿import math
 import os
 import sys
 import time
 import numpy
 import pygame
+import ctypes
 import random
 import psutil
 import string
 import win32ui
 import win32api
+import threading
 import win32print
 import win32process
-
 from constants import *
 from screeninfo import get_monitors
 from PIL import Image, ImageWin, ImageDraw, ImageFont
@@ -109,36 +109,77 @@ class Printer:
 
     def NewSketch(self, sketches, sketches_padding=1):
         all_images = []
-        remainderLastSketchW = 0
-
         sketches = [Image.open(s) if s is str else s for s in sketches if type(s) in (str, Image.Image)] if not all(s is Image.Image for s in sketches) else sketches
         # list_count_w = math.ceil((math.ceil(sum(s.size[0] for s in sketches) / self.printable_area[0]) * 2 * self.glue_padding + sum(s.size[0] for s in sketches))/self.printable_area[0])
-        w = self.printable_area[0] - self.glue_padding
+        w = self.printable_area[0] - self.glue_padding * 2
         images_h = []
-        for sketch in sketches:
-            while w > 0:  # unlimited sketches while W list is not < 0
-                sketch_h = sketch.size[1]
+        sketch_num = 0
+        sketch = sketches[sketch_num]
+        sketch_w = sketch.size[0]
+        sketch_h = sketch.size[1]
+        while sketch_num < len(sketches) -1 or sketch_w > 0:
+            while w > 0 and (sketch_num < len(sketches) - 1 or sketch_w > 0):
                 list_by_h = 0
                 while sketch_h > 0:
                     if not len(images_h) or len(images_h) - 1 < list_by_h:
                         images_h.append(Image.new('L', self.printable_area, 255))
-                        ImageDraw.Draw(images_h[list_by_h]).rectangle((-self.glue_padding, -self.glue_padding, *self.printable_area), 255, 100, self.glue_padding)
-                    i = sketch.crop((remainderLastSketchW, sketch.size[1] - sketch_h,
-                                     sketch.size[0] if sketch.size[0] <= w else w,
-                                     sketch.size[1] if sketch_h < self.printable_area[1] - self.glue_padding else self.printable_area[1] - self.glue_padding))
-                    images_h[list_by_h].paste(i, ((self.printable_area[0] - self.glue_padding) - w, 0), mask=i.split()[3])
-                    sketch_h -= self.printable_area[0] - self.glue_padding
+                        ImageDraw.Draw(images_h[list_by_h]).rectangle((0, 0, *self.printable_area), 255, 100, self.glue_padding)
+                    i = sketch.crop((
+                        sketch.size[0] - sketch_w,
+                        sketch.size[1] - sketch_h,
+                        sketch.size[0] if sketch.size[0] < w else w,
+                        sketch.size[1] if sketch_h < self.printable_area[1] - self.glue_padding * 2 else self.printable_area[1] - self.glue_padding * 2))
+                    images_h[list_by_h].paste(i, ((self.printable_area[0] - self.glue_padding) - w, self.glue_padding), mask=i.split()[3])
+                    sketch_h = sketch_h - (self.printable_area[1] - self.glue_padding)
                     list_by_h += 1
-                w -= sketch.size[0] - remainderLastSketchW if remainderLastSketchW else sketch.size[0] + self.mmTOpx(sketches_padding)
-                remainderLastSketchW = 0
+                w -= i.size[0] + self.mmTOpx(sketches_padding)
+                sketch_w -= i.size[0] + self.mmTOpx(sketches_padding)
+                if sketch_w <= 0 and sketch_num + 1 < len(sketches):
+                    sketch_num += 1
+                    sketch = sketches[sketch_num]
+                    sketch_w = sketch.size[0]
+                    sketch_h = sketch.size[1]
+
             else:
-                remainderLastSketchW = abs(w)
-                w = self.printable_area[0] - self.glue_padding
+                w = self.printable_area[0] - self.glue_padding * 2
                 all_images += images_h
+                sketch_h = sketch.size[1]
                 images_h = []
-        for n, im in enumerate(all_images):
-            im.save(DATAS_FOLDER_NAME+'/'+str(n)+'.png')
+        else:
+            all_images += images_h
         return all_images
+        # while sketch_num < len(sketches) + 1:
+        #     sketch = sketches[sketch_num]
+        #     sketch_w, sketch_h = sketch.size
+        #     while w > 0 and sketch_num < len(sketches) + 1:
+        #         list_by_h = 0
+        #         while sketch_h > 0:
+        #             if not len(images_h) or len(images_h) - 1 < list_by_h:
+        #                 images_h.append(Image.new('L', self.printable_area, 255))
+        #                 ImageDraw.Draw(images_h[list_by_h]).rectangle((0, 0, *self.printable_area), 255, 100, self.glue_padding)
+        #             i = sketch.crop(
+        #                 (sketch.size[0] - sketch_w,
+        #                  sketch.size[1] - sketch_h,
+        #                  sketch_w if sketch_w < w else w,
+        #                  sketch.size[1] if sketch_h < self.printable_area[1] - self.glue_padding * 2 else self.printable_area[1] - self.glue_padding * 2
+        #                  )
+        #             )
+        #             images_h[list_by_h].paste(i, (self.glue_padding + (self.printable_area[0] - self.glue_padding * 2 - w), self.glue_padding), mask=i.split()[3])
+        #             sketch_h = sketch_h - (self.printable_area[1] - self.glue_padding)
+        #         w -= i.size[0]
+        #         sketch_w -= i.size[0]
+        #         if not sketch_w:
+        #             sketch_num += 1
+        #             sketch = sketches[sketch_num]
+        #             sketch_w = sketch.size[0]
+        #             sketch_h = sketch.size[1]
+        #         i.show()
+        #         input()
+        #     else:
+        #         all_images += images_h
+
+    def PrintAll(self, images, task_group_name:str):
+        threading.Thread(target=tuple, args=[(self.newTask(im, task_group_name.format(n)) for n, im in enumerate(([Image.open(s) if s is str else s for s in images if type(s) in (str, Image.Image)] if not all(s is Image.Image for s in images) else images), 1))]).start()
 
     def newTask(self, image, task_name):
         if type(image) is str:
@@ -147,14 +188,14 @@ class Printer:
             self._print_image = image
         else:
             raise TypeError(f'Unsupported type for image (type: {type(image)})')
-
         self._print_image = self._print_image.rotate(90 if self._print_image.size[0] > self._print_image.size[1] and self.HORIZONTAL else 0, fillcolor=255)
-        if self._hDC is not None:
-            self._hDC.StartDoc(task_name)
-            self._hDC.StartPage()
-            ImageWin.Dib(self._print_image).draw(self._hDC.GetHandleOutput(), (0, 0, *image.size))
-            self._hDC.EndPage()
-            self._hDC.EndDoc()
+        # if self._hDC is not None:
+        #     self._hDC.StartDoc(task_name)
+        #     self._hDC.StartPage()
+        #     ImageWin.Dib(self._print_image).draw(self._hDC.GetHandleOutput(), (0, 0, *image.size))
+        #     self._hDC.EndPage()
+        #     self._hDC.EndDoc()
+        self._print_image.save(f'{task_name}.png')
         self._print_image = None
 
     def close(self):
@@ -285,20 +326,20 @@ class DrawSketch:
         self.font = ImageFont.truetype(DATAS_FOLDER_NAME+'/font.ttf', int(sum(self.printer.printable_area)/100))
         self.sketch_lines_color = (0, 0, 0)
 
-    def Elements(self, elements: tuple):
+    def Elements(self, elements: tuple, background=(0, 0, 0, 0)):
         imgs = []
         if 1 in elements:
-            imgs.append(self.FirstElement())
+            imgs.append(self.FirstElement(background))
         if 2 in elements:
-            imgs.append(self.SecondElement())
+            imgs.append(self.SecondElement(background))
         if 3 in elements:
-            imgs.append(self.ThirdElement())
+            imgs.append(self.ThirdElement(background))
         if 4 in elements:
-            imgs.append(self.FourthElement())
+            imgs.append(self.FourthElement(background))
         return imgs
 
-    def FirstElement(self):
-        image = Image.new('RGBA', (self.printer.mmTOpx((self.OG / 4 + 5) / 3 + self.techno_padding*2), self.printer.mmTOpx(self.billetH + self.VOG + self.VBD + self.techno_padding*2)), (0, 0, 0, 0))
+    def FirstElement(self, bg=(0, 0, 0, 0)):
+        image = Image.new('RGBA', (self.printer.mmTOpx((self.OG / 4 + 5) / 3 + self.techno_padding*2), self.printer.mmTOpx(self.billetH + self.VOG + self.VBD + self.techno_padding*2)), bg)
         sketch = ImageDraw.Draw(image)
 
         sketch.line(((0, 0), (0, self.printer.mmTOpx(self.billetH + self.VOG + self.VBD + self.techno_padding*2))), self.sketch_lines_color, self.printer.mmTOpx(1))
@@ -356,7 +397,7 @@ class DrawSketch:
         sketch.text((self.printer.mmTOpx(self.techno_padding+(self.OG / 4 + 5) / 3 * 0.3), self.printer.mmTOpx((self.billetH + self.VOG + self.techno_padding) * 0.7)), 'I', self.sketch_lines_color, font=self.font)
         return image
 
-    def SecondElement(self):
+    def SecondElement(self, bg=(0, 0, 0, 0)):
         tg = 20 / self.VOG
         xy = [(self.printer.mmTOpx(tg*(self.VOG+self.VBD)), self.printer.mmTOpx(self.billetH)),
               (0, self.printer.mmTOpx(self.VOG+self.VBD+self.billetH))]
@@ -376,7 +417,7 @@ class DrawSketch:
         # del xy, xy2, points, bezier, x, y
 
         image = Image.new('RGBA', (round(common_point[0]+self.printer.mmTOpx(self.techno_padding)),
-                                   round(upper_padding + self.printer.mmTOpx(self.VOG + self.VBD + self.techno_padding*2))), (0, 0, 0, 0))
+                                   round(upper_padding + self.printer.mmTOpx(self.VOG + self.VBD + self.techno_padding*2))), bg)
         sketch = ImageDraw.Draw(image)
 
         tg2 = (20-(self.OG-(self.OT-self.Y))/2/3/2/2) / self.VOG
@@ -436,7 +477,7 @@ class DrawSketch:
         sketch.text((self.printer.mmTOpx(self.techno_padding + (tg * (self.VOG + self.VBD)-tg2 * self.VOG + (self.OG / 4 + 5) / 3 * 0.6)), upper_padding + self.printer.mmTOpx(self.techno_padding + self.VOG) * 0.8), 'II', self.sketch_lines_color, font=self.font)
         return image
 
-    def ThirdElement(self):
+    def ThirdElement(self, bg=(0, 0, 0, 0)):
         up_line = 18
         tg = 20 / self.VOG
         tg3 = (20+(self.OG-(self.OT-self.Y))/2/3/2/2) / self.VOG
@@ -447,7 +488,7 @@ class DrawSketch:
         h_exemplar = 62
         ts = [t / 100.0 for t in range(101)]
         image = Image.new('RGBA', (self.printer.mmTOpx(self.techno_padding * 2 + (self.OG / 4 + 5) / 3 + ((self.ONK-self.OG)/2/3+5) + (tg * (self.VOG + self.VBD) - (self.OG-(self.OT-self.Y))/2/3/2/2)),
-                                   self.printer.mmTOpx(self.techno_padding * 2 + up_line + self.billetH + self.VOG + self.VBD)), (0, 0, 0, 0))
+                                   self.printer.mmTOpx(self.techno_padding * 2 + up_line + self.billetH + self.VOG + self.VBD)), bg)
         sketch = ImageDraw.Draw(image)
         xy0 = [
             (self.printer.mmTOpx(self.techno_padding + tg3 * self.VOG), self.printer.mmTOpx(self.techno_padding + up_line + self.billetH)),
@@ -565,14 +606,14 @@ class DrawSketch:
         sketch.text((self.printer.mmTOpx(self.techno_padding + (tg * (self.VOG + self.VBD) - (self.OG - (self.OT - self.Y)) / 2 / 3 / 2 / 2 + ((self.OG / 4 + 5) / 3) * 0.5 - tg_mid0 * self.VOG)), (self.printer.mmTOpx((self.techno_padding + up_line + self.billetH) + self.VOG * 0.5))), 'III', self.sketch_lines_color, font=self.font)
         return image
 
-    def FourthElement(self):
+    def FourthElement(self, bg=(0, 0, 0, 0)):
         up_line = 18
         tg = 20 / self.VOG
         tg1 = ((self.OG-(self.OT-self.Y))/2/3/2/2) / self.VOG
         tg_mid1 = ((self.OG-(self.OT-self.Y))/2/3/2+5) / (self.VOG - 10)
         ts = [t / 100.0 for t in range(101)]
         image = Image.new('RGBA', (self.printer.mmTOpx(self.techno_padding * 2 + (self.OG / 4 - 5) / 2 + ((self.ONK-self.OG)/2/3) * 1.5),
-                                   self.printer.mmTOpx(self.techno_padding * 2 + up_line + self.billetH + self.VOG + self.VBD)), (0, 0, 0, 0))
+                                   self.printer.mmTOpx(self.techno_padding * 2 + up_line + self.billetH + self.VOG + self.VBD)), bg)
         sketch = ImageDraw.Draw(image)
 
         _points = [
@@ -615,7 +656,7 @@ class DrawSketch:
             (self.printer.mmTOpx(self.techno_padding + (self.OG / 4 - 5) / 2-tg1*self.VOG), self.printer.mmTOpx(self.techno_padding + up_line + self.billetH + self.VOG)),
             (self.printer.mmTOpx(self.techno_padding + ((self.ONK-self.OG)/2/3) * 1.5 + (self.OG / 4 - 5) / 2), self.printer.mmTOpx(self.techno_padding + up_line + self.billetH + self.VOG + self.VBD))
         ]
-        xy3[0] = min([i for i in GetCommonPoints(_curve, xy3[:2]) if i[1] > 0])
+        xy3[0] = GetCommonPointsForBezierCurve(_curve, xy3[:2])
         xy31 = ((xy3[0][0] + self.printer.mmTOpx(self.techno_padding), xy3[0][1] - self.printer.mmTOpx(self.techno_padding)),
                 (xy3[1][0] + self.printer.mmTOpx(self.techno_padding), xy3[1][1]),
                 (xy3[2][0] + self.printer.mmTOpx(self.techno_padding), xy3[2][1] + self.printer.mmTOpx(self.techno_padding)))
@@ -650,14 +691,14 @@ class DrawSketch:
         sketch.line(((self.printer.mmTOpx(self.techno_padding + (tg * (self.VOG + self.VBD) - (self.OG - (self.OT - self.Y)) / 2 / 3 / 2 / 2 + ((self.OG / 4 + 5) / 3) * 0.5 - tg_mid1 * self.VOG)), (self.printer.mmTOpx((self.techno_padding + up_line + self.billetH) + self.VOG * 0.2))), (self.printer.mmTOpx(self.techno_padding + (tg * (self.VOG + self.VBD) - (self.OG - (self.OT - self.Y)) / 2 / 3 / 2 / 2 + ((self.OG / 4 + 5) / 3) * 0.5 - tg_mid1 * self.VOG)), (self.printer.mmTOpx((self.techno_padding + up_line + self.billetH) + self.VOG * 0.5)))), self.sketch_lines_color, self.printer.mmTOpx(1))
         sketch.line(((self.printer.mmTOpx(self.techno_padding + (tg * (self.VOG + self.VBD) - (self.OG - (self.OT - self.Y)) / 2 / 3 / 2 / 2 + ((self.OG / 4 + 5) / 3) * 0.4 - tg_mid1 * self.VOG)), (self.printer.mmTOpx((self.techno_padding + up_line + self.billetH) + self.VOG * 0.4))), (self.printer.mmTOpx(self.techno_padding + (tg * (self.VOG + self.VBD) - (self.OG - (self.OT - self.Y)) / 2 / 3 / 2 / 2 + ((self.OG / 4 + 5) / 3) * 0.5 - tg_mid1 * self.VOG)), (self.printer.mmTOpx((self.techno_padding + up_line + self.billetH) + self.VOG * 0.5))), (self.printer.mmTOpx(self.techno_padding + (tg * (self.VOG + self.VBD) - (self.OG - (self.OT - self.Y)) / 2 / 3 / 2 / 2 + ((self.OG / 4 + 5) / 3) * 0.6 - tg_mid1 * self.VOG)), (self.printer.mmTOpx((self.techno_padding + up_line + self.billetH) + self.VOG * 0.4)))), self.sketch_lines_color, self.printer.mmTOpx(1))
         sketch.text((self.printer.mmTOpx(self.techno_padding + (tg * (self.VOG + self.VBD) - (self.OG - (self.OT - self.Y)) / 2 / 3 / 2 / 2 + ((self.OG / 4 + 5) / 3) * 0.5 - tg_mid1 * self.VOG)), (self.printer.mmTOpx((self.techno_padding + up_line + self.billetH) + self.VOG * 0.5))), 'IV', self.sketch_lines_color, font=self.font)
-
         return image
 
 
-Sketch = DrawSketch(OG=760, OT=640, ONK=850, VOG=120, VBU=220, VBD=120, Y=50, printer=Printer('monitorHDC'))
+# Sketch = DrawSketch(OG=760, OT=640, ONK=850, VOG=120, VBU=220, VBD=120, Y=50, printer=Printer('monitorHDC'))
+# Sketch = DrawSketch(OG=760, OT=640, ONK=850, VOG=120, VBU=220, VBD=120, Y=50, printer=Printer(GetDefaultPrinter()))
 # Sketch.FirstElement().show()
 # Sketch.SecondElement().show()
-Sketch.printer.NewSketch(Sketch.Elements([1,2,3,4]))
+# Sketch.printer.NewSketch(Sketch.Elements([1,2,3,4]))
 # Sketch.FourthElement().show()
 # Sketch.printer.NewSketch(Sketch.FirstElement())
 

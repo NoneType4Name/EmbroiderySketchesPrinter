@@ -1,5 +1,3 @@
-import pygame.display
-
 from functions import *
 from scene.main import SceneMain
 
@@ -49,7 +47,7 @@ class Window:
         self.display = display
         self.vsync = vsync
         self.caption = caption
-        self.screen = pygame.display.set_mode(self.size, self.flag, self.depth)
+        self.screen = pygame.display.set_mode(self.size, self.flag, self.depth, self.display, self.vsync)
         pygame.display.set_icon(pygame.image.load(icon_path))
         pygame.display.set_caption(caption)
         pygame.font.init()

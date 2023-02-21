@@ -10,6 +10,6 @@ else:
     EXE = False
 
 window = Window(__file__, MAIN_DIR, EXE)
-window.init("Embroidery Sketches Printer", f"{DATAS_FOLDER_NAME}/ico.png", FULL_SIZE)
+window.init("Embroidery Sketches Printer", f"{DATAS_FOLDER_NAME}/ico.png", FULL_SIZE, flag=pygame.SCALED, vsync=1)
 while window.RUN:
     window.update()

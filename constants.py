@@ -3,7 +3,8 @@ MAIN = 0
 
 DATAS_FOLDER_NAME = 'assets'
 
-NAME_PRINT_PROCESS = 'Print Sketch {num}'
+NAME_PRINT_PROCESS = 'Print Sketch {}'
+SKETCHES = 4
 
 HORZRES = 8
 VERTRES = 10
