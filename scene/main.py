@@ -61,13 +61,14 @@ class SceneMain:
     def NewSketch(self):
         images = DrawSketch(*tuple(map(int, self.data_panel.data)), printer=Printer('monitorHDC')).Elements(self.data_panel.allowed_sketches,)
         if images:
-            w = sum(map(lambda i: i.size[0], images))
+            pad = Printer('monitorHDC').mmTOpx(10)
+            w = sum(map(lambda i: i.size[0], images)) + pad * len(images)
             h = max(map(lambda i: i.size[1], images))
             im = Image.new('RGBA', (w, h), (0, 0, 0, 0))
             x = 0
             for i in images:
                 im.paste(i, (x, h - i.size[1]))
-                x += i.size[0]
+                x += i.size[0] + pad
             if im.size[0] > self.size[0]:
                 im = im.resize((self.size[0], int(im.size[1] * (self.size[0] / im.size[0]))), Image.ANTIALIAS)
             if im.size[1] > self.size[1]:

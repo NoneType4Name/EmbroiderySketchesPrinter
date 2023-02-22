@@ -171,7 +171,7 @@ class Button(pygame.sprite.Sprite):
 def GetListsCounts(self, printer_name=None):
     if printer_name is not None:
         self.DrawSketch.printer = Printer(printer_name)
-    self.printer_label2.value = 'Листов к печати: {}'.format(len(self.DrawSketch.printer.NewSketch(self.DrawSketch.Elements(self.sketches))))
+    self.printer_label2.value = 'Листов к печати: {}'.format(len(self.DrawSketch.printer.NewSketch(self.DrawSketch.Elements(self.sketches), 10)))
 
 
 
@@ -368,7 +368,7 @@ class PrintWindow(pygame.sprite.Sprite):
             .5,
             (self.rect.h * 0.08 * 2) * 0.04,
             .5,
-            func=lambda s: self.DrawSketch.printer.PrintAll(self.DrawSketch.printer.NewSketch(self.DrawSketch.Elements(self.sketches, (255, 255, 255)), 20), NAME_PRINT_PROCESS) or self.kill(),
+            func=lambda s: self.DrawSketch.printer.PrintAll(self.DrawSketch.printer.NewSketch(self.DrawSketch.Elements(self.sketches, (255, 255, 255)), 10), NAME_PRINT_PROCESS) or self.kill(),
             real_pos=numpy.array(self.rect.topleft) + numpy.array((self.rect.w * 0.75, self.rect.h * 0.8)))
 
         self._drag = False
