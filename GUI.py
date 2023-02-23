@@ -1,5 +1,3 @@
-import pygame
-
 from functions import *
 
 pygame.font.init()
@@ -172,7 +170,6 @@ def GetListsCounts(self, printer_name=None):
     if printer_name is not None:
         self.DrawSketch.printer = Printer(printer_name)
     self.printer_label2.value = 'Листов к печати: {}'.format(len(self.DrawSketch.printer.NewSketch(self.DrawSketch.Elements(self.sketches), 10)))
-
 
 
 class PrintWindow(pygame.sprite.Sprite):

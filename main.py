@@ -21,9 +21,6 @@ class Window:
 
         self.FPS = GAME_FPS
 
-        # self.CONSOLE_HWND = 0
-        # self.CONSOLE_PROCESS = None
-        # self.CONSOLE_PID = 0
         self.GAME_HWND = 0
         self.GAME_PROCESS = None
         self.GAME_PID = 0
