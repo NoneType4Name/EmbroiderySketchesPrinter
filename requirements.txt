@@ -1,0 +1,8 @@
+pygame==2.1.3
+screeninfo==0.8.1
+netifaces==0.11.0
+psutil==5.9.4
+pypiwin32==223
+pywin32==305
+numpy==1.24.2
+Pillow==9.4.0
