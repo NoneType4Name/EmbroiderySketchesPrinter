@@ -132,8 +132,8 @@ class Printer:
                     images_h[list_by_h].paste(i, ((self.printable_area[0] - self.glue_padding) - w, self.glue_padding), mask=i.split()[3])
                     sketch_h = sketch_h - (self.printable_area[1] - self.glue_padding)
                     list_by_h += 1
-                w -= i.size[0] + self.mmTOpx(sketches_padding)
-                sketch_w -= i.size[0] + self.mmTOpx(sketches_padding)
+                sketch_w -= i.size[0] + (self.mmTOpx(sketches_padding) if not sketch_w - i.size[0] else 0)
+                w -= i.size[0] + (self.mmTOpx(sketches_padding) if not sketch_w else 0)
                 if sketch_w <= 0 and sketch_num + 1 < len(sketches):
                     sketch_num += 1
                     sketch = sketches[sketch_num]
@@ -160,12 +160,13 @@ class Printer:
         else:
             raise TypeError(f'Unsupported type for image (type: {type(image)})')
         self._print_image = self._print_image.rotate(90 if self._print_image.size[0] > self._print_image.size[1] and self.HORIZONTAL else 0, fillcolor=255)
-        if self._hDC is not None:
-            self._hDC.StartDoc(task_name)
-            self._hDC.StartPage()
-            ImageWin.Dib(self._print_image).draw(self._hDC.GetHandleOutput(), (0, 0, *image.size))
-            self._hDC.EndPage()
-            self._hDC.EndDoc()
+        # if self._hDC is not None:
+        #     self._hDC.StartDoc(task_name)
+        #     self._hDC.StartPage()
+        #     ImageWin.Dib(self._print_image).draw(self._hDC.GetHandleOutput(), (0, 0, *image.size))
+        #     self._hDC.EndPage()
+        #     self._hDC.EndDoc()
+        self._print_image.save(task_name+'.png')
         self._print_image = None
 
     def close(self):
@@ -274,8 +275,8 @@ def GetCommonPointsForBezierCurve(points1, points2):
             return x, y
 
 
-# def GetLineLength(xy0, xy1):
-#     return ((xy1[0]-xy0[0])**2+(xy1[1]-xy0[1])**2)**0.5
+def GetLineLength(xy0, xy1):
+    return ((xy1[0]-xy0[0])**2+(xy1[1]-xy0[1])**2)**0.5
 
 # 'Основание груди', 'Обхват талии', 'Обхват низа корсета', 'Высота основания груди', 'Высота бока вверх', 'Высота бока вниз', 'Утяжка'
 
@@ -625,21 +626,26 @@ class DrawSketch:
         )
         xy2 = (min([i for i in GetCommonPoints(_curve, _points) if i[1] > 0]), _points[1])
 
-        # length = GetLineLength(*xy2)
-        xy21 = (
-            (xy2[0][0] - self.printer.mmTOpx(self.techno_padding), xy2[0][1] - self.printer.mmTOpx(self.techno_padding)),
-            (xy2[1][0] - self.printer.mmTOpx(self.techno_padding), xy2[1][1]),
-        )
         xy3 = [
             (self.printer.mmTOpx(self.techno_padding + (self.OG / 4 - 5) / 2+tg1*(up_line + self.billetH + self.VOG)), self.printer.mmTOpx(self.techno_padding)),
             (self.printer.mmTOpx(self.techno_padding + (self.OG / 4 - 5) / 2-tg1*self.VOG), self.printer.mmTOpx(self.techno_padding + up_line + self.billetH + self.VOG)),
             (self.printer.mmTOpx(self.techno_padding + ((self.ONK-self.OG)/2/3) * 1.5 + (self.OG / 4 - 5) / 2), self.printer.mmTOpx(self.techno_padding + up_line + self.billetH + self.VOG + self.VBD))
         ]
         xy3[0] = GetCommonPointsForBezierCurve(_curve, xy3[:2])
+        xy4 = (xy2[0], xy3[0])
+        length_hypo = GetLineLength(*xy4)
+        length_leg = GetLineLength(*xy2)
+        length_leg2 = ((length_hypo ** 2) - (length_leg ** 2))**0.5
+
+        tg_ = length_leg2 / length_leg
+        xy21 = (
+            (xy2[0][0] - self.printer.mmTOpx(self.techno_padding), xy2[0][1]-(xy2[0][1] - self.printer.mmTOpx(self.techno_padding) * tg_)),
+            (xy2[1][0] - self.printer.mmTOpx(self.techno_padding), xy2[1][1]),
+        )
         xy31 = ((xy3[0][0] + self.printer.mmTOpx(self.techno_padding), xy3[0][1] - self.printer.mmTOpx(self.techno_padding)),
                 (xy3[1][0] + self.printer.mmTOpx(self.techno_padding), xy3[1][1]),
                 (xy3[2][0] + self.printer.mmTOpx(self.techno_padding), xy3[2][1] + self.printer.mmTOpx(self.techno_padding)))
-        xy4 = (xy2[0], xy3[0])
+
         xy41 = (xy21[0], xy31[0])
 
         xy5 = (
