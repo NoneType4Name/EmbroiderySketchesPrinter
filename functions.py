@@ -160,13 +160,13 @@ class Printer:
         else:
             raise TypeError(f'Unsupported type for image (type: {type(image)})')
         self._print_image = self._print_image.rotate(90 if self._print_image.size[0] > self._print_image.size[1] and self.HORIZONTAL else 0, fillcolor=255)
-        # if self._hDC is not None:
-        #     self._hDC.StartDoc(task_name)
-        #     self._hDC.StartPage()
-        #     ImageWin.Dib(self._print_image).draw(self._hDC.GetHandleOutput(), (0, 0, *image.size))
-        #     self._hDC.EndPage()
-        #     self._hDC.EndDoc()
-        self._print_image.save(task_name+'.png')
+        if self._hDC is not None:
+            self._hDC.StartDoc(task_name)
+            self._hDC.StartPage()
+            ImageWin.Dib(self._print_image).draw(self._hDC.GetHandleOutput(), (0, 0, *image.size))
+            self._hDC.EndPage()
+            self._hDC.EndDoc()
+        # self._print_image.save(task_name+'.png')
         self._print_image = None
 
     def close(self):
