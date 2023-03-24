@@ -36,6 +36,9 @@ class Window:
         self.clock = pygame.time.Clock()
         self.Scene = None
 
+        self.Properties = getFileProperties(sys.executable)
+        self.Version = Version(str(self.Properties.FileVersion))
+
     def init(self, caption: str, icon_path: str, size: SIZE, flag=0, depth=0, display=0, vsync=0):
         os.environ['SDL_VIDEO_CENTERED'] = '1'
         self.size = size
