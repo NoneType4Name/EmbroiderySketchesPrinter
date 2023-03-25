@@ -37,30 +37,10 @@ class SceneMain:
                                        func=lambda _:
                                        self.notifications.add(GUI.PrintWindow(
                                            self,
-                                           (random.randrange(0, int(self.size.w * 0.7)), random.randrange(0, int(self.size.h * 0.6)), self.size.w * 0.3, self.size.h * 0.4),
+                                           # (random.randrange(0, int(self.size.w * 0.7)), random.randrange(0, int(self.size.h * 0.6)), self.size.w * 0.3, self.size.h * 0.4),
+                                           (self.size.w//2-self.size.w * 0.15, self.size.h//2-self.size.h * 0.2, self.size.w * 0.3, self.size.h * 0.4),
                                            LANGUAGE.DescriptionPrintEmbroidery, tuple(LANGUAGE.DefaultMetrics.values()), self.data_panel.allowed_sketches, 0.1, 1, 1)
                                        ))
-        # self.about_button = GUI.Button(
-        #     self,
-        #     (self.size.w * 0.95, self.size.h * 0.88, self.size.h * 0.03, self.size.h * 0.03),
-        #     (self.size.w * 0.95, self.size.h * 0.88, self.size.h * 0.03, self.size.h * 0.03),
-        #     (self.size.w * 0.95, self.size.h * 0.88, self.size.h * 0.03, self.size.h * 0.03),
-        #     'i',
-        #     'i',
-        #     (255, 255, 255),
-        #     (202, 219, 252),
-        #     (0, 0, 0),
-        #     (0, 0, 0),
-        #     (102, 153, 255),
-        #     (0, 0, 255),
-        #     (self.size.w * 0.05 + self.size.h * 0.05) * 0.01,
-        #     .4,
-        #     (self.size.w * 0.05 + self.size.h * 0.05) * 0.01,
-        #     .4,
-        #     func=lambda _: self.notifications.add(GUI.AboutWindow(self, (random.randrange(0, int(self.size.w * 0.7)), random.randrange(0, int(self.size.h * 0.6)), self.size.w * 0.3, self.size.h * 0.4),
-        #                                                           'О программе.', 0.1, (255,255,255), (100, 100, 100), (255, 0, 0), 1, (100, 200, 200),
-        #                                                           1, (100, 100, 100)))
-        # )
         self.AboutLabel = GUI.Label(
             self,
             (self.size.w * 0.7, self.size.h * 0.975, self.size.w * 0.14, self.size.h * 0.015),
@@ -191,9 +171,3 @@ class SceneMain:
                                       LANGUAGE.Print.BuildErrorDescription, 16)
             except Exception:
                 ctypes.windll.user32.MessageBoxW(self.parent.GAME_HWND,LANGUAGE.Print.UnexpectedError, None, 16)
-            # print((sys.exc_info()[2].tb_next.tb_next.tb_next.tb_frame.f_lasti))
-            # print([*LANGUAGE.Print.FuncNames.values()].index(sys.exc_info()[2].tb_next.tb_next.tb_next.tb_frame.f_code.co_name) + 1,
-            #       sys.exc_info()[2].tb_next.tb_next.tb_next.tb_frame.f_lineno)
-            # for a in dir(exc_tb.tb_next.tb_next.tb_frame.f_code):
-            # print(exc_tb.tb_frame.f_back)
-                  # exc_tb.tb_lasti, exc_tb.tb_lineno, exc_tb.tb_next)

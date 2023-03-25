@@ -16,6 +16,7 @@ import threading
 import subprocess
 import urlextract
 import webbrowser
+import pywintypes
 import win32print
 import win32process
 from constants import *
@@ -226,9 +227,10 @@ def OpenUpdate(self, status, button):
     status.value = LANGUAGE.Update.Launching
     button.value = LANGUAGE.Update.LaunchingButton
     try:
+
         subprocess.Popen(self._name_exe)
         self.parent.RUN = False
-    except Exception as e:
+    except OSError as e:
         status.color = COLORS.label.UpdateStatus.error.background
         status.color_active = COLORS.label.UpdateStatus.error.backgroundActive
         status.text_color = COLORS.label.UpdateStatus.error.text
@@ -242,7 +244,7 @@ class Printer:
     def __init__(self, printer_name: str):
         if printer_name != DUMMY_MONITOR:
             self.isLocal = True
-            self._name = printer_name
+            self.name = printer_name
             self._hDC = win32ui.CreateDC()
             self._hDC.CreatePrinterDC(printer_name)
             self.printable_area = self._hDC.GetDeviceCaps(HORZRES), self._hDC.GetDeviceCaps(VERTRES)
@@ -251,11 +253,7 @@ class Printer:
             try:
                 self._pHD = win32print.OpenPrinter(printer_name, {"DesiredAccess": win32print.PRINTER_ALL_ACCESS})
                 self.properties = win32print.GetPrinter(self._pHD, 9)
-                # self._defaultPDEVMODE = {}
-                # for a in dir(self.properties['pDevMode']):
-                #     if a != 'DriverData':
-                #         self._defaultPDEVMODE[a] = getattr(self.properties['pDevMode'], a)
-            except Exception:
+            except pywintypes.error:
                 self._pHD = None
                 self.properties = None
                 self.isLocal = False
@@ -283,12 +281,12 @@ class Printer:
     def ReInit(self):
         self.close()
         self._hDC = win32ui.CreateDC()
-        self._hDC.CreatePrinterDC(self._name)
+        self._hDC.CreatePrinterDC(self.name)
         self.printable_area = self._hDC.GetDeviceCaps(HORZRES), self._hDC.GetDeviceCaps(VERTRES)
         self.printer_size = self._hDC.GetDeviceCaps(PHYSICALWIDTH), self._hDC.GetDeviceCaps(PHYSICALHEIGHT)
         self.dpi = self._hDC.GetDeviceCaps(LOGPIXELSX)
         if self.isLocal:
-            self._pHD = win32print.OpenPrinter(self._name, {"DesiredAccess": win32print.PRINTER_ALL_ACCESS})
+            self._pHD = win32print.OpenPrinter(self.name, {"DesiredAccess": win32print.PRINTER_ALL_ACCESS})
             self.properties = win32print.GetPrinter(self._pHD, 9)
 
     def UpdateProperties(self):
@@ -297,7 +295,7 @@ class Printer:
 
     def Menu(self):
         if self.isLocal:
-            win32print.DocumentProperties(pygame.display.get_wm_info()['window'], self._pHD, self._name, self.properties['pDevMode'], self.properties['pDevMode'], 5)
+            win32print.DocumentProperties(pygame.display.get_wm_info()['window'], self._pHD, self.name, self.properties['pDevMode'], self.properties['pDevMode'], 5)
             self.UpdateProperties()
             self.ReInit()
 
@@ -1173,11 +1171,11 @@ class DrawSketch:
 
         xy21 = (
             (xy2[0][0] - self.printer.mmTOpx(self.techno_padding),
-             xy2[0][1] - self.printer.mmTOpx(self.techno_padding * 1.3)),
+             xy2[0][1] - self.printer.mmTOpx(self.techno_padding)),
             (xy2[1][0] - self.printer.mmTOpx(self.techno_padding), xy2[1][1]),
         )
         xy31 = ((xy3[0][0] + self.printer.mmTOpx(self.techno_padding),
-                 xy3[0][1] - self.printer.mmTOpx(self.techno_padding * 0.7)),
+                 xy3[0][1] - self.printer.mmTOpx(self.techno_padding)),
                 (xy3[1][0] + self.printer.mmTOpx(self.techno_padding), xy3[1][1]),
                 (xy3[2][0] + self.printer.mmTOpx(self.techno_padding),
                  xy3[2][1] + self.printer.mmTOpx(self.techno_padding)))
