@@ -1,3 +1,5 @@
+import traceback
+
 import GUI
 from functions import *
 
@@ -169,5 +171,6 @@ class SceneMain:
                                                  LANGUAGE.Print.BuildErrorText.format(n=[*LANGUAGE.Print.FuncNames.values()].index(sys.exc_info()[2].tb_next.tb_next.tb_next.tb_frame.f_code.co_name) + 1,
                                                                                       c=sys.exc_info()[2].tb_next.tb_next.tb_next.tb_frame.f_lineno),
                                       LANGUAGE.Print.BuildErrorDescription, 16)
+                print(''.join(traceback.TracebackException(*sys.exc_info()).format()))
             except Exception:
                 ctypes.windll.user32.MessageBoxW(self.parent.GAME_HWND,LANGUAGE.Print.UnexpectedError, None, 16)
