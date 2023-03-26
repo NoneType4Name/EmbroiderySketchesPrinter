@@ -174,7 +174,9 @@ def GetListsCounts(self, printer: Printer):
         self.DrawSketch.printer = printer
     if self.DrawSketch.printer.isLocal:
         try:
-            s = LANGUAGE.Print.ListCounts.format(type=self.DrawSketch.printer.properties['pDevMode'].FormName, count=self.DrawSketch.printer.NewSketch(self.DrawSketch.Elements(self.sketches), 10, True))
+            l = self.DrawSketch.printer.NewSketch(self.DrawSketch.Elements(self.sketches), 10, True)
+            s = LANGUAGE.Print.ListCounts.format(type=self.DrawSketch.printer.properties['pDevMode'].FormName, count=l,
+                                                 w='ов' if 10 < l < 20 else '' if not (l % 10-1) else 'а' if 1 < l % 10 < 5 else 'ов')
             if printer.name == self._printer.name:
                 self.printer_label2.value = s
         except Exception:

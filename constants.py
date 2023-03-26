@@ -65,7 +65,7 @@ TRANSLATE = {
         'PrinterSelect': '{}',
         'MonochromePrint': 'Монохромная печать',
         'ColoredPrint': 'Цветная печать',
-        'ListCounts': 'К печати {count} лист {type}',
+        'ListCounts': 'К печати {count} лист{w} {type}',
         'PrinterIsNotPhysic': 'Принтер не является физическим',
         'BuildSketches': 'Построение чертежа...',
         'BuildUnexpectedErrorDescription': None,
