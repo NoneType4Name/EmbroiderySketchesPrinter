@@ -1175,11 +1175,13 @@ class DrawSketch:
                self.printer.mmTOpx(self.techno_padding*2+tg_normal*(self.VOG+self.VBD)-tg_Y*self.VOG+((self.OG/2/2+5)/3)-tg_mid_with_pad*(self.VOG-mid_rise), self.techno_padding+padding_before_exemplar+self.billetH+self.VOG-mid_rise),
                self.printer.mmTOpx(self.techno_padding*2+tg_normal*(self.VOG+self.VBD)-tg_Y*self.VOG+((self.OG/2/2+5)/3)-tg_mid*self.VOG, self.techno_padding+padding_before_exemplar+self.billetH+self.VOG-mid_rise))
         xy21 = (xy21[0], *make_bezier(xy21[1:])(ts))
-        xy21 = (*xy21,(self.printer.mmTOpx(self.techno_padding+tg_normal*(self.VOG+self.VBD)-tg_Y*self.VOG+((self.OG/2/2+5)/3)+(self.ONK-self.OG)/2, self.techno_padding+padding_before_exemplar+self.billetH+self.VOG+self.VBD)))
+        xy21 = (*xy21,(self.printer.mmTOpx(self.techno_padding*2+tg_normal*(self.VOG+self.VBD)-tg_Y*self.VOG+((self.OG/2/2+5)/3)+(self.ONK-self.OG)/2, self.techno_padding*2+padding_before_exemplar+self.billetH+self.VOG+self.VBD)))
         xy21 = (*xy21[:-2], ((xy21[-2][0]+self.printer.mmTOpx(radius)+xy21[-1][0]+self.printer.mmTOpx(radius))/2,
                            (xy21[-2][1]+xy21[-1][1])/2
                            ), xy21[-1])
         xy21 = (*xy21[:-3], *make_bezier(xy21[-3:])(ts))
+        xy3 = (xy1[-1], xy2[-1])
+        xy31 = (xy11[-1], xy21[-1])
         # xy2 = make_bezier(xy2)(ts)
 
         image = Image.new('RGBA', (round(xy2[-1][0])+self.printer.mmTOpx(self.techno_padding), self.printer.mmTOpx(padding_before_exemplar+self.billetH+self.VOG+self.VBD+self.techno_padding*2)), bg)
@@ -1191,6 +1193,9 @@ class DrawSketch:
         sketch.line(points1, self.sketch_lines_color, self.printer.mmTOpx(1))
         sketch.line(points11, self.sketch_lines_color, self.printer.mmTOpx(1))
         sketch.line(xy2, self.sketch_lines_color, self.printer.mmTOpx(1))
+        sketch.line(xy21, self.sketch_lines_color, self.printer.mmTOpx(1))
+        sketch.line(xy3, self.sketch_lines_color, self.printer.mmTOpx(1))
+        sketch.line(xy31, self.sketch_lines_color, self.printer.mmTOpx(1))
         # cos = sin/tg
         # kat = padding_before_exemplar * sin
         # sketch.line((points0[-1], points0[-4]), self.sketch_lines_color, self.printer.mmTOpx(2))
