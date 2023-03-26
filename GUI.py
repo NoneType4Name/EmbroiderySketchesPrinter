@@ -196,23 +196,15 @@ def Print(self):
 
 
 class PrintWindow(pygame.sprite.Sprite):
-    def __init__(self, parent, rect, description, metrics, sketches, radius, close_button_radius,
-                 # button_color, button_border, button_text_color,
-                 # button_color_active, button_border_active, button_text_color_active,
-                 # select_bar_color, select_bar_border, select_bar_text,
-                 border=0
-                 ):
+    def __init__(self, parent, rect, description, metrics, sketches, radius, close_button_radius, border=0):
         pygame.sprite.Sprite.__init__(self)
         self.parent = parent
         self.rect = pygame.Rect(rect)
         self.image = pygame.surface.Surface((self.rect.w, self.rect.h), pygame.SRCALPHA)
         self.radius = radius
         self.description = description
-        # self.description_color = description_color
-        # self.description_background = description_background
         self.close_button_radius = close_button_radius
         self.border = border
-        # self.border_color = border_color
 
         self._printers = GetPrintersList()
         self._printer_index = self._printers.index(GetDefaultPrinter())
