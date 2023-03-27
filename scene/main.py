@@ -168,6 +168,8 @@ class SceneMain:
                 self.updated_data = True
                 element = [*LANGUAGE.Print.FuncNames.values()].index(sys.exc_info()[2].tb_next.tb_next.tb_next.tb_frame.f_code.co_name) + 1
                 line = sys.exc_info()[2].tb_next.tb_next.tb_next.tb_frame.f_lineno
+                tb = ''.join(traceback.TracebackException(*sys.exc_info()).format())
+                print(tb)
                 if ctypes.windll.user32.MessageBoxW(self.parent.GAME_HWND,
                                                     LANGUAGE.Print.BuildErrorText.format(n=element, c=line),
                                                     LANGUAGE.Print.BuildErrorDescription, 17) == 1:
@@ -184,7 +186,6 @@ class SceneMain:
                                 d = getattr(sys.exc_info()[2].tb_next.tb_next.tb_next.tb_frame.f_locals['self'].printer, a)
                                 if isinstance(d, (bool, int, float, str, tuple, list)):
                                     variables[a] = d
-                        tb = ''.join(traceback.TracebackException(*sys.exc_info()).format())
                         msg = '\n'.join('{}:\t\t{}'.format(k, v) for k, v in zip(variables.keys(), variables.values())) + '\n' + tb
                         threading.Thread(target=report.send_message, args=[['alexkim0710@gmail.com'], f'Exception in element: {element}, code: {line}.', msg, self.parent.Version]).start()
                     except ImportError:
