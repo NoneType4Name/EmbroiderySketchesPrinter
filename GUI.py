@@ -20,7 +20,7 @@ class MainFont:
             numpy.array(srf.get_size()) / max(numpy.array(srf.get_size()) / numpy.array((text_rect.w, text_rect.h))))
 
 
-Font = MainFont(None)
+Font = MainFont(FONT_PATH)
 
 
 def draw_round_rect(rect, color, radius):
@@ -272,8 +272,8 @@ class PrintWindow(pygame.sprite.Sprite):
             (self.rect.w * 0.8, self.rect.h * 0.3, self.rect.h * 0.08, self.rect.h * 0.08),
             (0, 0, self.rect.h * 0.08, self.rect.h * 0.08),
             (0, 0, self.rect.h * 0.08, self.rect.h * 0.08),
-            ' ▼',
-            ' ▼',
+            '▼',
+            '▼',
             COLORS.PrintWindow.button.down.background,
             COLORS.PrintWindow.button.down.backgroundActive,
             COLORS.PrintWindow.button.down.text,
@@ -296,8 +296,8 @@ class PrintWindow(pygame.sprite.Sprite):
             (self.rect.w * 0.9, self.rect.h * 0.3, self.rect.h * 0.08, self.rect.h * 0.08),
             (0, 0, self.rect.h * 0.08, self.rect.h * 0.08),
             (0, 0, self.rect.h * 0.08, self.rect.h * 0.08),
-            ' ▲',
-            ' ▲',
+            '▲',
+            '▲',
             COLORS.PrintWindow.button.up.background,
             COLORS.PrintWindow.button.up.backgroundActive,
             COLORS.PrintWindow.button.up.text,

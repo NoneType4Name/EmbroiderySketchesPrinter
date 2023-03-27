@@ -163,14 +163,32 @@ class SceneMain:
             self.updated_data = False
         except Exception:
             try:
-                # print(dir(sys.exc_info()[2].tb_next.tb_next.tb_next.tb_frame.f_lasti))
                 self.data_panel.data = list(LANGUAGE.DefaultMetrics.values())
                 self.data_panel.update_texts()
                 self.updated_data = True
-                ctypes.windll.user32.MessageBoxW(self.parent.GAME_HWND,
-                                                 LANGUAGE.Print.BuildErrorText.format(n=[*LANGUAGE.Print.FuncNames.values()].index(sys.exc_info()[2].tb_next.tb_next.tb_next.tb_frame.f_code.co_name) + 1,
-                                                                                      c=sys.exc_info()[2].tb_next.tb_next.tb_next.tb_frame.f_lineno),
-                                      LANGUAGE.Print.BuildErrorDescription, 16)
-                print(''.join(traceback.TracebackException(*sys.exc_info()).format()))
+                element = [*LANGUAGE.Print.FuncNames.values()].index(sys.exc_info()[2].tb_next.tb_next.tb_next.tb_frame.f_code.co_name) + 1
+                line = sys.exc_info()[2].tb_next.tb_next.tb_next.tb_frame.f_lineno
+                if ctypes.windll.user32.MessageBoxW(self.parent.GAME_HWND,
+                                                    LANGUAGE.Print.BuildErrorText.format(n=element, c=line),
+                                                    LANGUAGE.Print.BuildErrorDescription, 17) == 1:
+                    try:
+                        import report
+                        variables = {}
+                        for a in dir(sys.exc_info()[2].tb_next.tb_next.tb_next.tb_frame.f_locals['self']):
+                            if a[0] != '_':
+                                d = getattr(sys.exc_info()[2].tb_next.tb_next.tb_next.tb_frame.f_locals['self'], a)
+                                if isinstance(d, (bool, int, float, str, tuple, list)):
+                                    variables[a] = d
+                        for a in dir(sys.exc_info()[2].tb_next.tb_next.tb_next.tb_frame.f_locals['self'].printer):
+                            if a[0] != '_':
+                                d = getattr(sys.exc_info()[2].tb_next.tb_next.tb_next.tb_frame.f_locals['self'].printer, a)
+                                if isinstance(d, (bool, int, float, str, tuple, list)):
+                                    variables[a] = d
+                        tb = ''.join(traceback.TracebackException(*sys.exc_info()).format())
+                        msg = '\n'.join('{}:\t\t{}'.format(k, v) for k, v in zip(variables.keys(), variables.values())) + '\n' + tb
+                        threading.Thread(target=report.send_message, args=[['alexkim0710@gmail.com'], f'Exception in element: {element}, code: {line}.', msg, self.parent.Version]).start()
+                    except ImportError:
+                        pass
             except Exception:
+                print(''.join(traceback.TracebackException(*sys.exc_info()).format()))
                 ctypes.windll.user32.MessageBoxW(self.parent.GAME_HWND,LANGUAGE.Print.UnexpectedError, None, 16)
