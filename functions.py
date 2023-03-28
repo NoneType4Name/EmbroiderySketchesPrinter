@@ -9,7 +9,6 @@ import ctypes
 import random
 import psutil
 import string
-
 import win32con
 import win32gui
 import win32ui
@@ -1026,7 +1025,7 @@ class DrawSketch:
         return image
 
     def ThirdElement(self, bg=(0, 0, 0, 0)):
-        VBU = 170
+        VBU = 220
         padding_before_exemplar = 18
         w_exemplar = 100
         h_exemplar = 62
@@ -1074,9 +1073,8 @@ class DrawSketch:
                      self.printer.mmTOpx(self.techno_padding+(tg_normal*(self.VOG+self.VBD)-tg_Y*self.VOG)+(self.OG/2/2+5)/3, self.techno_padding+padding_before_exemplar+self.billetH+self.VOG),
                      ]
 
-        xy_points1 = list(map(lambda cord: (cord[0] * (self.printer.mmTOpx(300) / 300) + points0[-1][0], cord[1] * (self.printer.mmTOpx(70) / 70) + points0[-1][1]), ((0, 0), (165, 55), (300, 70))))
-        xy_points1_ = (points0[-1], _line_vbu[0], tuple(numpy.array(points0[-1])+numpy.array(self.printer.mmTOpx(300, 70*4))))
-        points1 = make_bezier(xy_points1)(ts)
+        # xy_points1 = list(map(lambda cord: (cord[0] * (self.printer.mmTOpx(300) / 300) + points0[-1][0], cord[1] * (self.printer.mmTOpx(70) / 70) + points0[-1][1]), ((0, 0), (165, 55), (300, 70))))
+        xy_points1_ = (points0[-1], _line_vbu[0], self.printer.mmTOpx(self.techno_padding+(tg_normal*(self.VOG+self.VBD)-tg_Y*self.VOG)+(self.OG/2/2+5)/3+(self.OG/2/2-5), self.techno_padding+padding_before_exemplar+self.billetH))
         # xy_points1.insert(1, min(GetCommonPoints(points1, _line_vbu), key=lambda v: tuple(abs(numpy.array(v) - numpy.array(_line_vbu[0])))))
         # for i, p in enumerate(xy_points1[2:], 2):
         #     k = (xy_points1[1][1]/xy_points1[i][1])
@@ -1084,13 +1082,14 @@ class DrawSketch:
         #     xy_points1[i] = xy_points1[i][0], _line_vbu[0][1]/k
         # xy_points1[1] = _line_vbu[0]
         # tuple(xy_points1.__setitem__(i, (xy_points1[i][0], ((_line_vbu[0][1]-xy_points1[0][1])/(p[1]-xy_points1[1][1]))/(p[1]-xy_points1[0][1]))) for i, p in enumerate(xy_points1[2:],2))
-        points1 = make_bezier(xy_points1_)(ts)
-        # points1 = xy_points1_
+        points1 = *xy_points1_[:2], *make_bezier(xy_points1_[2:])(ts)
 
-        points11 = make_bezier(tuple(map(lambda cord: (
-            cord[0] * (self.printer.mmTOpx(300) / 300) + points01[-1][0],
-            cord[1] * (self.printer.mmTOpx(70) / 70) + points01[-1][1]),
-                                       ((0, 0), (165, 55), (300, 70)))))(ts)
+        _line_vbu1 = [self.printer.mmTOpx(self.techno_padding*2+(tg_normal*(self.VOG+self.VBD)-tg_Y*self.VOG)+(self.OG/2/2+5)/3, ((padding_before_exemplar+self.billetH+self.VOG)-VBU)),
+                      self.printer.mmTOpx(self.techno_padding*2+(tg_normal*(self.VOG+self.VBD)-tg_Y*self.VOG)+(self.OG/2/2+5)/3, self.techno_padding+padding_before_exemplar+self.billetH+self.VOG),
+                     ]
+        xy_points11_ = (points01[-1], _line_vbu1[0], self.printer.mmTOpx(self.techno_padding*2+(tg_normal*(self.VOG+self.VBD)-tg_Y*self.VOG)+(self.OG/2/2+5)/3+(self.OG/2/2-5), padding_before_exemplar+self.billetH))
+        points11 = *xy_points11_[:2], *make_bezier(xy_points11_[2:])(ts)
+
         _xy2 = (
             self.printer.mmTOpx(self.techno_padding+(tg_normal*(self.VOG+self.VBD)-tg_Y*self.VOG)+(self.OG/2/2+5)/3-tg_mid*(padding_before_exemplar+self.billetH), self.techno_padding),
             self.printer.mmTOpx(self.techno_padding+(tg_normal*(self.VOG+self.VBD)-tg_Y*self.VOG)+(self.OG/2/2+5)/3,self.techno_padding+padding_before_exemplar+self.billetH))
