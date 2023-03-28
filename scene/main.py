@@ -45,9 +45,9 @@ class SceneMain:
                                        ))
         self.AboutLabel = GUI.Label(
             self,
-            (self.size.w * 0.7, self.size.h * 0.975, self.size.w * 0.14, self.size.h * 0.015),
-            (self.size.w * 0.7, self.size.h * 0.975, self.size.w * 0.14, self.size.h * 0.015),
-            0,
+            (self.size.w * 0.55, self.size.h * 0.95, self.size.w * 0.3, self.size.h * 0.05),
+            (self.size.w * 0.55, self.size.h * 0.95, self.size.w * 0.3, self.size.h * 0.05),
+            0.5,
             LANGUAGE.About.format(v=self.parent.Version, s=self.parent.size, d=self.monitor.dpi),
             COLORS.label.About.background,
             COLORS.label.About.backgroundActive,
@@ -58,9 +58,9 @@ class SceneMain:
         )
         self.GitLabel = GUI.Label(
             self,
-            (self.AboutLabel.rect.bottomright[0], self.size.h * 0.975, self.size.w * 0.02, self.size.h * 0.015),
-            (self.AboutLabel.rect.bottomright[0], self.size.h * 0.975, self.size.w * 0.02, self.size.h * 0.015),
-            0,
+            (self.AboutLabel.rect.bottomright[0]+self.size.w * 0.005, self.AboutLabel.rect.y, self.size.w * 0.02, self.AboutLabel.rect.h),
+            (self.AboutLabel.rect.bottomright[0]+self.size.w * 0.005, self.AboutLabel.rect.y, self.size.w * 0.02, self.AboutLabel.rect.h),
+            0.5,
             LANGUAGE.Github,
             COLORS.label.Git.background,
             COLORS.label.Git.backgroundActive,
@@ -72,9 +72,9 @@ class SceneMain:
         )
         self.TgLabel = GUI.Label(
             self,
-            (self.GitLabel.rect.bottomright[0], self.size.h * 0.975, self.size.w * 0.02, self.size.h * 0.015),
-            (self.GitLabel.rect.bottomright[0], self.size.h * 0.975, self.size.w * 0.02, self.size.h * 0.015),
-            0,
+            (self.GitLabel.rect.bottomright[0]+self.size.w * 0.005, self.AboutLabel.rect.y, self.size.w * 0.024, self.AboutLabel.rect.h),
+            (self.GitLabel.rect.bottomright[0]+self.size.w * 0.005, self.AboutLabel.rect.y, self.size.w * 0.024, self.AboutLabel.rect.h),
+            0.5,
             LANGUAGE.Telegram,
             COLORS.label.Tg.background,
             COLORS.label.Tg.backgroundActive,
@@ -86,9 +86,9 @@ class SceneMain:
         )
         self.UpdateStatusLabel = GUI.Label(
             self,
-            (self.TgLabel.rect.bottomright[0]+self.size.w * 0.01, self.size.h * 0.975, self.size.w * 0.07, self.size.h * 0.015),
-            (self.TgLabel.rect.bottomright[0]+self.size.w * 0.01, self.size.h * 0.975, self.size.w * 0.07, self.size.h * 0.015),
-            0,
+            (self.TgLabel.rect.bottomright[0]+self.size.w * 0.01, self.AboutLabel.rect.y, self.size.w * 0.1, self.AboutLabel.rect.h),
+            (self.TgLabel.rect.bottomright[0]+self.size.w * 0.01, self.AboutLabel.rect.y, self.size.w * 0.1, self.AboutLabel.rect.h),
+            0.5,
             LANGUAGE.Update.Getting,
             COLORS.label.UpdateStatus.background,
             COLORS.label.UpdateStatus.backgroundActive,
@@ -99,9 +99,9 @@ class SceneMain:
         )
         self.UpdateLabel = GUI.Label(
             self,
-            (self.UpdateStatusLabel.rect.bottomright[0]+self.size.w * 0.005, self.size.h * 0.975, self.size.w * 0.03, self.size.h * 0.015),
-            (self.UpdateStatusLabel.rect.bottomright[0]+self.size.w * 0.005, self.size.h * 0.975, self.size.w * 0.03, self.size.h * 0.015),
-            0,
+            (self.UpdateStatusLabel.rect.bottomright[0]+self.size.w * 0.005, self.AboutLabel.rect.y, self.size.w * 0.05, self.AboutLabel.rect.h),
+            (self.UpdateStatusLabel.rect.bottomright[0]+self.size.w * 0.005, self.AboutLabel.rect.y, self.size.w * 0.05, self.AboutLabel.rect.h),
+            0.5,
             LANGUAGE.Update.GettingButton,
             COLORS.label.UpdateButton.background,
             COLORS.label.UpdateButton.backgroundActive,
