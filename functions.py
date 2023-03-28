@@ -23,6 +23,7 @@ import pywintypes
 import win32print
 import win32process
 from constants import *
+from bs4 import BeautifulSoup
 from ctypes import wintypes, byref
 # from screeninfo import get_monitors
 from PIL import Image, ImageWin, ImageDraw, ImageFont
@@ -66,14 +67,11 @@ class SIZE(tuple):
     def __repr__(self):
         return f'{self.w}x{self.h}'
 
-# FULL_SIZE = SIZE((get_monitors()[0].width, get_monitors()[0].height))
-work_area = wintypes.RECT()
-ctypes.windll.user32.SystemParametersInfoA(0x0030,0, byref(work_area),0)
-FULL_SIZE = SIZE((work_area.right, work_area.bottom))
 
+monitor_info = win32api.GetMonitorInfo(win32api.MonitorFromPoint((0,0)))
+FULL_SIZE = SIZE((monitor_info['Work'][2]-monitor_info['Work'][0], monitor_info['Work'][3]-monitor_info['Work'][1]-(win32api.GetSystemMetrics(33) + win32api.GetSystemMetrics(4) + win32api.GetSystemMetrics(92))))
+PANEL_SIZE = SIZE((win32api.GetSystemMetrics(0)-monitor_info['Work'][2]-monitor_info['Work'][0], win32api.GetSystemMetrics(1)-monitor_info['Work'][3]-monitor_info['Work'][1]))
 
-# raise 1
-# FULL_SIZE = SIZE((win32api.GetSystemMetrics(0), win32api.GetSystemMetrics(1)))
 
 def getFileProperties(name: str) -> DATA:
     """
@@ -168,8 +166,8 @@ def GetUpdate(self, status, button):
     status.border_color_active = COLORS.label.UpdateStatus.check.borderActive
     while not self.NewVersion:
         try:
-            tag = json.loads(requests.get(f'{API_GITHUB}/repos/{AUTHOR}/{"".join(NAME.split(" "))}/releases/latest', headers={'Authorization': GITHUB_OAUTH_KEY}).content)
-            self.NewVersion = Version(tag['name'])
+            version = BeautifulSoup(requests.get('https://github.com/NoneType4Name/EmbroiderySketchesPrinter/releases/latest/').text, "lxml").find('h1', {'data-view-component':"true", 'class':"d-inline mr-3"}).text
+            self.NewVersion = Version(version)
             if self.parent.Version < self.NewVersion:
                 status.value = LANGUAGE.Update.Loading
                 button.value = LANGUAGE.Update.LoadingButton

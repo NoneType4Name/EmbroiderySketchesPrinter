@@ -6,8 +6,6 @@ AUTHOR = 'NoneType4Name'
 TELEGRAM = f'https://t.me/{AUTHOR}'
 GITHUB = 'https://github.com'
 RAW_GITHUB = 'https://raw.githubusercontent.com'
-API_GITHUB = 'https://api.github.com'
-GITHUB_OAUTH_KEY = 'e3d681863cc9855c2b25bb9942faa0e2d12dffff'
 
 DATAS_FOLDER_NAME = 'assets'
 
