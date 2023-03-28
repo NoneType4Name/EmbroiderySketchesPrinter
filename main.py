@@ -26,7 +26,6 @@ class Window:
         self.GAME_PID = 0
         self.RUN = False
         self.size = None
-        self.window_size = None
         self.flag = None
         self.depth = None
         self.display = None
@@ -53,6 +52,14 @@ class Window:
         pygame.font.init()
         pygame.scrap.init()
         self.GAME_HWND = pygame.display.get_wm_info()['window']
+        work_area = wintypes.RECT()
+        ctypes.windll.user32.GetWindowRect(self.GAME_HWND, byref(work_area))
+        print(work_area.left, work_area.top)
+        print(work_area.right, work_area.bottom)
+        print(self.size)
+        self.size = SIZE((self.size.w-(work_area.right+work_area.left-self.size.w),self.size.h-(work_area.bottom+work_area.top-self.size.h)))
+        print(self.size)
+        win32gui.SetWindowPos(self.GAME_HWND, win32con.HWND_TOP, work_area.left, 0, self.size.w, self.size.h, 0)
         self.GAME_PID = get_pid_by_hwnd(self.GAME_HWND)
         self.GAME_PROCESS = psutil.Process(self.GAME_PID)
         self.Scene = SceneMain(self)

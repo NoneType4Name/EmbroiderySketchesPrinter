@@ -9,6 +9,9 @@ import ctypes
 import random
 import psutil
 import string
+
+import win32con
+import win32gui
 import win32ui
 import win32api
 import requests
@@ -20,6 +23,7 @@ import pywintypes
 import win32print
 import win32process
 from constants import *
+from ctypes import wintypes, byref
 # from screeninfo import get_monitors
 from PIL import Image, ImageWin, ImageDraw, ImageFont
 
@@ -62,10 +66,14 @@ class SIZE(tuple):
     def __repr__(self):
         return f'{self.w}x{self.h}'
 
-
 # FULL_SIZE = SIZE((get_monitors()[0].width, get_monitors()[0].height))
-FULL_SIZE = SIZE((win32api.GetSystemMetrics(16) + 2, win32api.GetSystemMetrics(17) + 2))
+work_area = wintypes.RECT()
+ctypes.windll.user32.SystemParametersInfoA(0x0030,0, byref(work_area),0)
+FULL_SIZE = SIZE((work_area.right, work_area.bottom))
 
+
+# raise 1
+# FULL_SIZE = SIZE((win32api.GetSystemMetrics(0), win32api.GetSystemMetrics(1)))
 
 def getFileProperties(name: str) -> DATA:
     """

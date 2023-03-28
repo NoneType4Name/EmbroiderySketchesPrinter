@@ -56,7 +56,7 @@ TRANSLATE = {
     },
     'About': '{v}, {s}x{d}, dev: '+AUTHOR+', links:',
     'Telegram': 'Telegram',
-    'Github': 'GitHub',
+    'Github': 'GitHub ',
 
     'ButtonPrintEmbroidery': 'Печать выкройки',
     'DescriptionPrintEmbroidery': 'Печать заготовок',
