@@ -526,7 +526,7 @@ def pascal_row(n):
     return result
 
 
-def GetCommonPoints(points1, points2: (float, float)):
+def GetCommonPoints(points1, points2):
     c = []
     for i in range(len(points1) - 1):
         x1y1, x2y2 = points1[i], points1[i + 1]
@@ -546,8 +546,8 @@ def GetCommonPoints(points1, points2: (float, float)):
 
 def GetCommonPointsForBezierCurve(points1, points2):
     for i in range(len(points1) - (1 if len(points1) - 1 else 0)):
-        x1, y1, x2, y2 = map(round, (points1[i][0], points1[i][1], points1[i + 1][0], points1[i + 1][1]))
-        x3, y3, x4, y4 = map(round, (points2[0][0], points2[0][1], points2[1][0], points2[1][1]))
+        x1, y1, x2, y2 = points1[i][0], points1[i][1], points1[i + 1][0], points1[i + 1][1]
+        x3, y3, x4, y4 = points2[0][0], points2[0][1], points2[1][0], points2[1][1]
         if x1 > x2:
             x1, x2 = x2, x1
             y1, y2 = y2, y1
@@ -569,8 +569,7 @@ def GetCommonPointsForBezierCurve(points1, points2):
         b2 = y3 - k2 * x3
         x = (b2 - b1) / (k1 - k2)
         y = k1 * x + b1
-        print((x1,round(x), x2), (y1 , round(y) , y2))
-        if x1 <= round(x) <= x2 and y1 <= round(y) <= y2:
+        if x1 <= x <= x2 and y1 <= y <= y2:
             return x, y
 
 
@@ -1025,7 +1024,7 @@ class DrawSketch:
         return image
 
     def ThirdElement(self, bg=(0, 0, 0, 0)):
-        VBU = 220
+        VBU = 240
         padding_before_exemplar = 18
         w_exemplar = 100
         h_exemplar = 62
@@ -1072,23 +1071,30 @@ class DrawSketch:
         _line_vbu = [self.printer.mmTOpx(self.techno_padding+(tg_normal*(self.VOG+self.VBD)-tg_Y*self.VOG)+(self.OG/2/2+5)/3, self.techno_padding+((padding_before_exemplar+self.billetH+self.VOG)-VBU)),
                      self.printer.mmTOpx(self.techno_padding+(tg_normal*(self.VOG+self.VBD)-tg_Y*self.VOG)+(self.OG/2/2+5)/3, self.techno_padding+padding_before_exemplar+self.billetH+self.VOG),
                      ]
-
-        # xy_points1 = list(map(lambda cord: (cord[0] * (self.printer.mmTOpx(300) / 300) + points0[-1][0], cord[1] * (self.printer.mmTOpx(70) / 70) + points0[-1][1]), ((0, 0), (165, 55), (300, 70))))
-        xy_points1_ = (points0[-1], _line_vbu[0], self.printer.mmTOpx(self.techno_padding+(tg_normal*(self.VOG+self.VBD)-tg_Y*self.VOG)+(self.OG/2/2+5)/3+(self.OG/2/2-5), self.techno_padding+padding_before_exemplar+self.billetH))
-        # xy_points1.insert(1, min(GetCommonPoints(points1, _line_vbu), key=lambda v: tuple(abs(numpy.array(v) - numpy.array(_line_vbu[0])))))
+        xy_points1 = list(map(lambda cord: (cord[0] * (self.printer.mmTOpx(300) / 300) + points0[-1][0], cord[1] * (self.printer.mmTOpx(70) / 70) + points0[-1][1]), ((0, 0), (165, 55), (300, 70))))
+        xy_points1.insert(1, min(GetCommonPoints(make_bezier(xy_points1)(ts), _line_vbu), key=lambda v: tuple(abs(numpy.array(v) - numpy.array(_line_vbu[0])))))
+        xy_points1_ = (points0[-1], _line_vbu[0], (xy_points1[0][0]+self.printer.mmTOpx(165), (xy_points1[0][1]+(xy_points1[1][1]-xy_points1[0][1]))+self.printer.mmTOpx(55)),
+                       (xy_points1[0][0]+self.printer.mmTOpx(300), (xy_points1[0][1]+(xy_points1[1][1]-xy_points1[0][1]))+self.printer.mmTOpx(70)))
         # for i, p in enumerate(xy_points1[2:], 2):
         #     k = (xy_points1[1][1]/xy_points1[i][1])
         #     # print((xy_points1[i][0]/(xy_points1[i][0]-_line_vbu[0][0])))
         #     xy_points1[i] = xy_points1[i][0], _line_vbu[0][1]/k
         # xy_points1[1] = _line_vbu[0]
         # tuple(xy_points1.__setitem__(i, (xy_points1[i][0], ((_line_vbu[0][1]-xy_points1[0][1])/(p[1]-xy_points1[1][1]))/(p[1]-xy_points1[0][1]))) for i, p in enumerate(xy_points1[2:],2))
-        points1 = *xy_points1_[:2], *make_bezier(xy_points1_[2:])(ts)
+        points1 = xy_points1_[0], *make_bezier(xy_points1_[1:])(ts)
+        # points1 =  xy_points1_
 
         _line_vbu1 = [self.printer.mmTOpx(self.techno_padding*2+(tg_normal*(self.VOG+self.VBD)-tg_Y*self.VOG)+(self.OG/2/2+5)/3, ((padding_before_exemplar+self.billetH+self.VOG)-VBU)),
-                      self.printer.mmTOpx(self.techno_padding*2+(tg_normal*(self.VOG+self.VBD)-tg_Y*self.VOG)+(self.OG/2/2+5)/3, self.techno_padding+padding_before_exemplar+self.billetH+self.VOG),
+                      self.printer.mmTOpx(self.techno_padding*2+(tg_normal*(self.VOG+self.VBD)-tg_Y*self.VOG)+(self.OG/2/2+5)/3, padding_before_exemplar+self.billetH+self.VOG),
                      ]
-        xy_points11_ = (points01[-1], _line_vbu1[0], self.printer.mmTOpx(self.techno_padding*2+(tg_normal*(self.VOG+self.VBD)-tg_Y*self.VOG)+(self.OG/2/2+5)/3+(self.OG/2/2-5), padding_before_exemplar+self.billetH))
-        points11 = *xy_points11_[:2], *make_bezier(xy_points11_[2:])(ts)
+        xy_points11 = list(map(lambda cord: (cord[0] * (self.printer.mmTOpx(300) / 300) + points0[-1][0], cord[1] * (self.printer.mmTOpx(70) / 70) + points0[-1][1]), ((0, 0), (165, 55), (300, 70))))
+        xy_points11.insert(1, min(GetCommonPoints(make_bezier(xy_points11)(ts), _line_vbu1), key=lambda v: tuple(abs(numpy.array(v) - numpy.array(_line_vbu1[0])))))
+        xy_points11_ = (points01[-1], _line_vbu1[0], (xy_points11[0][0]+self.printer.mmTOpx(165), (xy_points11[0][1]+(xy_points11[1][1]-xy_points11[0][1]))+self.printer.mmTOpx(55)),
+                       (xy_points11[0][0]+self.printer.mmTOpx(300), (xy_points11[0][1]+(xy_points11[1][1]-xy_points11[0][1]))+self.printer.mmTOpx(70)))
+        
+        # xy_points11_ = (points01[-1], _line_vbu1[0], self.printer.mmTOpx(self.techno_padding*2+(tg_normal*(self.VOG+self.VBD)-tg_Y*self.VOG)+(self.OG/2/2+5)/3+(self.OG/2/2-5), padding_before_exemplar+self.billetH))
+        # points11 = xy_points11_[0], *make_bezier(xy_points11_[1:])(ts)
+        points11 = xy_points11_
 
         _xy2 = (
             self.printer.mmTOpx(self.techno_padding+(tg_normal*(self.VOG+self.VBD)-tg_Y*self.VOG)+(self.OG/2/2+5)/3-tg_mid*(padding_before_exemplar+self.billetH), self.techno_padding),
@@ -1108,7 +1114,7 @@ class DrawSketch:
             self.printer.mmTOpx(self.techno_padding*2+(tg_normal*(self.VOG+self.VBD)-tg_Y*self.VOG)+(self.OG/2/2+5)/3, padding_before_exemplar+self.billetH))
         common_point1 = min(GetCommonPoints(points11, _xy21), key=lambda v: tuple(abs(numpy.array(v) - numpy.array(_xy21[0]))))
         xy21 = (
-            (self.printer.mmTOpx(self.techno_padding*2+(tg_normal*(self.VOG+self.VBD)-tg_Y*self.VOG)+(self.OG/2/2+5)/3)*2-common_point1[0], common_point1[1]),
+            (self.printer.mmTOpx(self.techno_padding)+xy2[0][0], xy2[0][1]-self.printer.mmTOpx(self.techno_padding)),
             self.printer.mmTOpx(self.techno_padding*2+(tg_normal*(self.VOG+self.VBD)-tg_Y*self.VOG)+(self.OG/2/2+5)/3,self.techno_padding+padding_before_exemplar+self.billetH),
             self.printer.mmTOpx(self.techno_padding*2+(tg_normal*(self.VOG+self.VBD)-tg_Y*self.VOG)+(self.OG/2/2+5)/3-tg_mid_with_pad*(self.VOG-mid_rise), self.techno_padding+padding_before_exemplar+self.billetH+(self.VOG-mid_rise)),
             self.printer.mmTOpx(((self.techno_padding*2+((self.techno_padding*2**0.5)-self.techno_padding)+(tg_normal*(self.VOG+self.VBD)-tg_Y*self.VOG)+(self.OG/2/2+5)/3+(self.ONK-self.OG)/2/3)+radius+(self.techno_padding*2+(tg_normal*(self.VOG+self.VBD)-tg_Y*self.VOG)+(self.OG/2/2+5)/3-tg_mid_with_pad*(self.VOG-mid_rise)))/2, ((self.techno_padding*2+padding_before_exemplar+self.billetH+self.VOG+self.VBD)+radius+(self.techno_padding+padding_before_exemplar+self.billetH+(self.VOG-mid_rise)))/2),
@@ -1121,11 +1127,9 @@ class DrawSketch:
         xy4 = (points0[-1], xy2[0])
         xy41 = (points01[-1], xy21[0])
         xy5 = (xy1[1], self.printer.mmTOpx(self.techno_padding+(tg_normal*(self.VOG+self.VBD)-tg_Y*self.VOG)+(self.OG/2/2+5)/3-tg_mid_with_pad*(self.VOG-mid_rise),self.techno_padding+padding_before_exemplar+self.billetH+(self.VOG-mid_rise)))
-        xy6 = (self.printer.mmTOpx(self.techno_padding+(tg_normal*(self.VOG+self.VBD)-tg_Y*self.VOG)+(self.OG/2/2+5)/3, self.techno_padding+((padding_before_exemplar+self.billetH+self.VOG)-VBU)),
-               self.printer.mmTOpx(self.techno_padding+(tg_normal*(self.VOG+self.VBD)-tg_Y*self.VOG)+(self.OG/2/2+5)/3, self.techno_padding+padding_before_exemplar+self.billetH+self.VOG),
-               )
-
-        image = Image.new('RGBA', self.printer.mmTOpx((self.techno_padding*2+tg_normal*(self.VOG+self.VBD)+(self.OG/2/2+5)/3+(self.ONK-self.OG)/2/3)*4, self.techno_padding*2+padding_before_exemplar+self.billetH+self.VOG+self.VBD), bg)
+        if xy21[0][1] < points01[-1][1]:
+            xy1, xy11, xy2, xy21, xy3, xy31, xy4, xy41, xy5, points0, points01 = tuple(tuple(map(lambda t: (t[0], t[1]+abs(xy21[0][1])), v)) for v in (xy1, xy11, xy2, xy21, xy3, xy31, xy4, xy41, xy5, points0, points01))
+        image = Image.new('RGBA', tuple(map(math.ceil, ((max((xy21[-1][0], xy21[0][0]))), xy21[-1][1]))), bg)
         sketch = ImageDraw.Draw(image)
         sketch.line(points0, self.sketch_lines_color, self.printer.mmTOpx(1))
         sketch.line(points01, self.sketch_lines_color, self.printer.mmTOpx(1))
@@ -1138,9 +1142,6 @@ class DrawSketch:
         sketch.line(xy4, self.sketch_lines_color, self.printer.mmTOpx(1))
         sketch.line(xy41, self.sketch_lines_color, self.printer.mmTOpx(1))
         sketch.line(xy5, self.sketch_lines_color, self.printer.mmTOpx(1))
-        sketch.line(_line_vbu, self.sketch_lines_color, self.printer.mmTOpx(1))
-        sketch.line(points1, self.sketch_lines_color, self.printer.mmTOpx(1))
-        # sketch.line(xy_points1, self.sketch_lines_color, self.printer.mmTOpx(1))
 
         sketch.line(((xy5[0][0]+(xy5[1][0]-xy5[0][0])*0.5, self.printer.mmTOpx(self.techno_padding + padding_before_exemplar + self.billetH + self.VOG * 0.3)),
                      (xy5[0][0]+(xy5[1][0]-xy5[0][0])*0.5, self.printer.mmTOpx(self.techno_padding + padding_before_exemplar + self.billetH + self.VOG * 0.8))
