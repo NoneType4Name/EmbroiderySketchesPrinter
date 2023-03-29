@@ -19,7 +19,6 @@ class MainFont:
             srf,
             numpy.array(srf.get_size()) / max(numpy.array(srf.get_size()) / numpy.array((text_rect.w, text_rect.h))))
 
-
 Font = MainFont(FONT_PATH)
 
 
