@@ -95,8 +95,8 @@ TRANSLATE = {
 COLORS = {
     'background': (200, 200, 200),
     'DataPanel':{
-        'background': (100, 200, 200),
-        'border': (255, 255, 255),
+        'background': (100, 200, 200, 200),
+        'border': (255, 255, 255, 200),
         'label':{
             'background': (0, 0, 0, 0),
             'backgroundActive': (0, 0, 0, 0),

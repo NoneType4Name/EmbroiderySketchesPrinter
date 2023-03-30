@@ -960,6 +960,7 @@ class DataPanel(pygame.sprite.Sprite):
             s.value = s.text
 
     def update(self):
+        self.image = pygame.Surface((self.rect.w, self.rect.h), pygame.SRCALPHA)
         if self.open:
             self.image.blit(
                 RoundedRect((0, 0, self.rect.w * 0.95, self.rect.h), COLORS.DataPanel.background, self.radius, self.border,

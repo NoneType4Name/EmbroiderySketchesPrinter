@@ -48,7 +48,7 @@ class SceneMain:
             (self.size.w * 0.4, self.size.h * 0.975, self.size.w * 0.3, self.size.h * 0.025),
             (self.size.w * 0.4, self.size.h * 0.975, self.size.w * 0.3, self.size.h * 0.025),
             0.5,
-            LANGUAGE.About.format(v=self.parent.Version, s=self.parent.size, d=self.monitor.dpi),
+            LANGUAGE.About.format(v=self.parent.Version if self.parent.isEXE else f"Is't builded app", s=self.parent.size, d=self.monitor.dpi),
             COLORS.label.About.background,
             COLORS.label.About.backgroundActive,
             COLORS.label.About.text,
