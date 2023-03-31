@@ -68,7 +68,7 @@ TRANSLATE = {
         'BuildSketches': 'Построение чертежа...',
         'BuildUnexpectedErrorDescription': None,
         'BuildUnexpectedError': 'Произошла непредвиденная ошибка\nОткрыть дополонительную информацию?',
-        'Settings': 'Детальнее',
+        'Settings': 'Настройки',
         'SettingsCaption': '',
         'Start': 'Печать',
         'Exit': 'Отмена',

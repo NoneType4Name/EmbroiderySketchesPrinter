@@ -314,8 +314,8 @@ class PrintWindow(pygame.sprite.Sprite):
 
         self.colored_label = Label(
             self.parent,
-            (self.rect.w * 0.08, self.rect.h * 0.47, self.rect.w * 0.3, self.rect.h * 0.08),
-            (self.rect.w * 0.08, self.rect.h * 0.47, self.rect.w * 0.3, self.rect.h * 0.08),
+            (self.rect.w * 0.03, self.rect.h * 0.47, self.rect.w * 0.3, self.rect.h * 0.08),
+            (self.rect.w * 0.03, self.rect.h * 0.47, self.rect.w * 0.3, self.rect.h * 0.08),
             0,
             LANGUAGE.Print.ColoredPrint,
             COLORS.PrintWindow.label.background,
