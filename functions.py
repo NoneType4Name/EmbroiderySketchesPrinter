@@ -244,7 +244,6 @@ def OpenUpdate(self, status, button):
         status.border_color_active = COLORS.label.UpdateStatus.error.borderActive
         status.value = LANGUAGE.Update.LaunchingError.format(e.winerror)
 
-
 class Printer:
     def __init__(self, printer_name: str):
         if printer_name != DUMMY_MONITOR:
@@ -540,7 +539,7 @@ def GetCommonPoints(points1, points2):
                             (x1y1[0] - x2y2[0]) * (x3y3[1] - x4y4[1]) - (x1y1[1] - x2y2[1]) * (x3y3[0] - x4y4[0]))
             c.append((x, y))
         except ZeroDivisionError:
-            pass
+            c.append(points1[0])
     return c
 
 
@@ -609,7 +608,6 @@ class DrawSketch:
         self.OG = OG
         self.OT = OT
         self.ONK = ONK
-        self.VOG = VOG
         self.VBU = VBU
         self.VBD = VBD
         self.Y = Y
@@ -1074,17 +1072,14 @@ class DrawSketch:
                 self.printer.mmTOpx(self.sketch_lines_width))
         return image
 
-if __name__ == '__main__':
-    # self.billetW = 100
-    # self.billetH = 62
-    # self._ts = [t / 100.0 for t in range(101)]
-    # image = Image.new('RGBA', (self.billetW, self.billetH), (255,255,255))
-    # ImageDraw.Draw(image).line(make_bezier(((0, 12), (5, 65), (50, 75), (90, 65), (100, 0)))(self._ts), 0, 1)
-    # image.save('blt.png')
-    Sketch = DrawSketch(OG=760, OT=640, ONK=850, VOG=120, VBU=220, VBD=120, Y=50, printer=Printer('monitorHDC'))
-    # Sketch.FirstElement((255,255,255)).show()
+# if __name__ == '__main__':
+    # img = Image.new('RGBA', (150, 90), (255,255,255, 0))
+    # ImageDraw.Draw(img).line(make_bezier(((0, 18), (8, 95), (75, 109), (135, 95), (150, 0)))([i / 100 for i in range(101)]), (0, 0, 0), 1)
+    # img.save('test.png')
+    # Sketch = DrawSketch(OG=760, OT=640, ONK=850, VOG=120, VBU=220, VBD=120, Y=50, printer=Printer('monitorHDC'))
+    # Sketch.FirstElement((255,255,255, 0)).save('test.png')
     # Sketch.SecondElement((255, 255, 255)).show()
-    Sketch.ThirdElement((255, 255, 255)).show()
+    # Sketch.ThirdElement((255, 255, 255)).show()
     # Sketch.FourthElement((255, 255, 255)).show()
     # Sketch.FifthElement((255, 255, 255)).show()
     # Sketch.SixthElement((255, 255, 255)).show()
