@@ -26,7 +26,6 @@ class Window:
         self.GAME_PID = 0
         self.RUN = False
         self.size = None
-        self.window_size = None
         self.flag = None
         self.depth = None
         self.display = None
@@ -35,6 +34,9 @@ class Window:
         self.screen = None
         self.clock = pygame.time.Clock()
         self.Scene = None
+
+        self.Properties = getFileProperties(sys.executable)
+        self.Version = Version(str(self.Properties.FileVersion))
 
     def init(self, caption: str, icon_path: str, size: SIZE, flag=0, depth=0, display=0, vsync=0):
         os.environ['SDL_VIDEO_CENTERED'] = '1'
@@ -50,6 +52,9 @@ class Window:
         pygame.font.init()
         pygame.scrap.init()
         self.GAME_HWND = pygame.display.get_wm_info()['window']
+        work_area = wintypes.RECT()
+        ctypes.windll.user32.GetWindowRect(self.GAME_HWND, byref(work_area))
+        win32gui.SetWindowPos(self.GAME_HWND, win32con.HWND_TOP, (work_area.left-PANEL_SIZE.w//2), -1 if PANEL_SIZE.h >= 0 else -PANEL_SIZE.h, self.size.w, self.size.h, 0)
         self.GAME_PID = get_pid_by_hwnd(self.GAME_HWND)
         self.GAME_PROCESS = psutil.Process(self.GAME_PID)
         self.Scene = SceneMain(self)
