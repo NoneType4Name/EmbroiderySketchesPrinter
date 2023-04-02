@@ -1,5 +1,3 @@
-import traceback
-
 import GUI
 from functions import *
 
@@ -11,7 +9,9 @@ class SceneMain:
         self.size = parent.size
         self.image = pygame.Surface(self.size, pygame.SRCALPHA)
         self.notifications = pygame.sprite.Group()
-        self.sketch = None
+        self.sketch = self._sketch = None
+        self.sketch_pos = numpy.array((0, 0))
+        self.sketch_zoom = 0.4
         self.updated_data = False
         self.monitor = Printer(DUMMY_MONITOR)
 
@@ -48,7 +48,7 @@ class SceneMain:
             (self.size.w * 0.4, self.size.h * 0.975, self.size.w * 0.3, self.size.h * 0.025),
             (self.size.w * 0.4, self.size.h * 0.975, self.size.w * 0.3, self.size.h * 0.025),
             0.5,
-            LANGUAGE.About.format(v=self.parent.Version if self.parent.isEXE else f"Is't builded app", s=self.parent.size, d=self.monitor.dpi),
+            LANGUAGE.About.format(m=round(self.sketch_zoom*100),v=self.parent.Version if self.parent.isEXE else f"Is't builded app", s=self.parent.size, d=self.monitor.dpi),
             COLORS.label.About.background,
             COLORS.label.About.backgroundActive,
             COLORS.label.About.text,
@@ -116,7 +116,7 @@ class SceneMain:
 
     def update(self):
         self.image.fill(COLORS.background)
-        self.image.blit(self.sketch, (numpy.array(self.size) - self.sketch.get_size())/2)
+        self.image.blit(self.sketch, tuple(self.sketch_pos))
         self.image.blit(self.print_button.image, self.print_button.rect.topleft)
         self.image.blit(self.AboutLabel.image, self.AboutLabel.rect.topleft)
         self.image.blit(self.GitLabel.image, self.GitLabel.rect.topleft)
@@ -124,8 +124,6 @@ class SceneMain:
         self.image.blit(self.UpdateStatusLabel.image, self.UpdateStatusLabel.rect.topleft)
         self.image.blit(self.UpdateLabel.image, self.UpdateLabel.rect.topleft)
         self.image.blit(self.data_panel.image, self.data_panel.rect.topleft)
-        # if any(map(lambda e: e.type == pygame.KEYDOWN and e.key == pygame.K_F1, self.parent.events)) and not self.notifications:
-        #     self.about_button.Function()
         if self.notifications.sprites():
             self.notifications.update()
             self.notifications.draw(self.image)
@@ -139,13 +137,26 @@ class SceneMain:
             self.UpdateLabel.update()
             if self.updated_data:
                 threading.Thread(target=self.NewSketch, daemon=True).start()
+        for event in self.parent.events:
+            if event.type == pygame.MOUSEMOTION:
+                if event.buttons[0]:
+                    self.sketch_pos+=event.rel
+            elif event.type == pygame.MOUSEWHEEL and 0 < self.sketch_zoom + event.precise_y/10 <= 1:
+                self.sketch_zoom = round(self.sketch_zoom + event.precise_y / 10, 1)
+                self.UpdateZoom()
         return self.image
+    
+    def UpdateZoom(self):
+        resized = self._sketch.resize(tuple(map(math.ceil, numpy.array(self._sketch.size)*self.sketch_zoom)), Image.ANTIALIAS)
+        self.sketch = pygame.image.fromstring(resized.tobytes(), resized.size, resized.mode)
+        self.AboutLabel.value = LANGUAGE.About.format(m=round(self.sketch_zoom*100),v=self.parent.Version if self.parent.isEXE else f"Is't builded app", s=self.parent.size, d=self.monitor.dpi)
+
 
     def NewSketch(self):
         try:
             images = DrawSketch(*tuple(map(int, self.data_panel.data)), printer=self.monitor).Elements(self.data_panel.allowed_sketches)
             if images:
-                pad = self.monitor.mmTOpx(10)
+                pad = self.monitor.mmTOpx(DEFAULT_SKETCHES_PADDING)
                 w = sum(map(lambda i: i.size[0], images)) + pad * len(images)
                 h = max(map(lambda i: i.size[1], images))
                 im = Image.new('RGBA', (w, h), (0, 0, 0, 0))
@@ -153,13 +164,12 @@ class SceneMain:
                 for i in images:
                     im.paste(i, (x, h - i.size[1]))
                     x += i.size[0] + pad
-                if im.size[0] > self.size[0]:
-                    im = im.resize((self.size[0], int(im.size[1] * (self.size[0] / im.size[0]))), Image.ANTIALIAS)
-                if im.size[1] > self.size[1]:
-                    im = im.resize((int(im.size[0] * (self.size[1] / im.size[1])), self.size[1]), Image.ANTIALIAS)
+                self._sketch = im
                 self.sketch = pygame.image.fromstring(im.tobytes(), im.size, im.mode)
             else:
                 self.sketch = pygame.surface.Surface(FULL_SIZE, pygame.SRCALPHA)
+            self.UpdateZoom()
+            self.sketch_pos = numpy.array(self.size)/2 - numpy.array(self.sketch.get_size())/2
             self.updated_data = False
         except Exception:
             try:
@@ -193,3 +203,4 @@ class SceneMain:
             except Exception:
                 print(''.join(traceback.TracebackException(*sys.exc_info()).format()))
                 ctypes.windll.user32.MessageBoxW(self.parent.GAME_HWND,LANGUAGE.Print.UnexpectedError, None, 16)
+                self.parent.RUN = False

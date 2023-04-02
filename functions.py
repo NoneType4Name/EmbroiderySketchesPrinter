@@ -14,6 +14,7 @@ import win32gui
 import win32ui
 import win32api
 import requests
+import traceback
 import threading
 import subprocess
 import urlextract
@@ -275,11 +276,11 @@ class Printer:
             self.printer_size = FULL_SIZE
             self._hDC = None
             hDC = win32gui.GetDC(None)
-            width_mm = win32ui.GetDeviceCaps(hDC, win32con.HORZSIZE)
-            height_mm = win32ui.GetDeviceCaps(hDC, win32con.VERTSIZE)
-            width = win32api.GetSystemMetrics(0)
-            height = win32api.GetSystemMetrics(1)
-            self.dpi = math.ceil(((width**2+height**2)**0.5)/(((width_mm**2+height_mm**2)**0.5)/25.4))
+            self.width_mm = win32ui.GetDeviceCaps(hDC, win32con.HORZSIZE)
+            self.height_mm = win32ui.GetDeviceCaps(hDC, win32con.VERTSIZE)
+            self.width = win32api.GetSystemMetrics(0)
+            self.height = win32api.GetSystemMetrics(1)
+            self.dpi = math.ceil(((self.width**2+self.height**2)**0.5)/(((self.width_mm**2+self.height_mm**2)**0.5)/25.4))
             # print(width, height)
             # self.printable_area = self._hDC.GetDeviceCaps(HORZRES), self._hDC.GetDeviceCaps(VERTRES)
             # self.dpi = win32ui.GetDeviceCaps(hDC, LOGPIXELSY)
