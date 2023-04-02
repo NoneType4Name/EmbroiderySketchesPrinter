@@ -66,7 +66,7 @@ class SIZE(tuple):
     def __repr__(self):
         return f'{self.w}x{self.h}'
 
-
+ctypes.windll.user32.SetThreadDpiAwarenessContext(wintypes.HANDLE(-2))
 monitor_info = win32api.GetMonitorInfo(win32api.MonitorFromPoint((0,0)))
 FULL_SIZE = SIZE((monitor_info['Work'][2]-monitor_info['Work'][0], monitor_info['Work'][3]-monitor_info['Work'][1]-(win32api.GetSystemMetrics(33) + win32api.GetSystemMetrics(4) + win32api.GetSystemMetrics(92))))
 PANEL_SIZE = SIZE((win32api.GetSystemMetrics(0)-monitor_info['Work'][2]-monitor_info['Work'][0], win32api.GetSystemMetrics(1)-monitor_info['Work'][3]-monitor_info['Work'][1]))
@@ -273,11 +273,16 @@ class Printer:
             self.isLocal = False
             self.printable_area = FULL_SIZE
             self.printer_size = FULL_SIZE
-            try:
-                self.dpi = ctypes.windll.user32.GetDpiForWindow(pygame.display.get_wm_info()['window'])
-            except KeyError:
-                self.dpi = ctypes.windll.user32.GetDpiForSystem()
-            # self.dpi = 81.58915444749253
+            self._hDC = None
+            hDC = win32gui.GetDC(None)
+            width_mm = win32ui.GetDeviceCaps(hDC, win32con.HORZSIZE)
+            height_mm = win32ui.GetDeviceCaps(hDC, win32con.VERTSIZE)
+            width = win32api.GetSystemMetrics(0)
+            height = win32api.GetSystemMetrics(1)
+            self.dpi = math.ceil(((width**2+height**2)**0.5)/(((width_mm**2+height_mm**2)**0.5)/25.4))
+            # print(width, height)
+            # self.printable_area = self._hDC.GetDeviceCaps(HORZRES), self._hDC.GetDeviceCaps(VERTRES)
+            # self.dpi = win32ui.GetDeviceCaps(hDC, LOGPIXELSY)
         self.HORIZONTAL = True if self.printable_area[0] > self.printable_area[1] else False
         self.glue_padding = self.mmTOpx(GLUE_PADDING)
 
@@ -681,6 +686,8 @@ class DrawSketch:
         sketch.line(points1, self.sketch_lines_color, self.printer.mmTOpx(self.sketch_lines_width))
 
         sketch.line(points11, self.sketch_lines_color, self.printer.mmTOpx(self.sketch_lines_width))
+        sketch.line((self.printer.mmTOpx(self.techno_padding, self.techno_padding+self.billetH),
+                     self.printer.mmTOpx(self.techno_padding+1000, self.techno_padding+self.billetH)), self.sketch_lines_color, self.printer.mmTOpx(self.sketch_lines_width))
         sketch.line(xy1, self.sketch_lines_color, self.printer.mmTOpx(self.sketch_lines_width))
         sketch.line(xy11, self.sketch_lines_color, self.printer.mmTOpx(self.sketch_lines_width))
         sketch.line(xy2, self.sketch_lines_color, self.printer.mmTOpx(self.sketch_lines_width))
@@ -1085,16 +1092,17 @@ class DrawSketch:
 
 if __name__ == '__main__':
     # img.save('test.png')
-    Sketch = DrawSketch(OG=720, OT=680, ONK=800, VOG=85, VBU=160, VBD=100, Y=50, printer=Printer(GetDefaultPrinter()))
+    Sketch = DrawSketch(OG=720, OT=680, ONK=800, VOG=85, VBU=160, VBD=100, Y=50, printer=Printer(DUMMY_MONITOR))
+    Sketch.printer.dpi = 243
     # img = Image.new('RGBA', Sketch.printer.mmTOpx(150, 90), (255,255,255))
     # ImageDraw.Draw(img).line((Sketch.printer.mmTOpx(0, 50), Sketch.printer.mmTOpx(119, 50)), (0, 0, 0), 2)
     # img.show()
     # Sketch.printer.newTask(img, 'test')
-    # Sketch.FirstElement((255,255,255)).show()
+    Sketch.FirstElement((255,255,255)).show()
     # Sketch.printer.newTask(Sketch.printer.NewSketch([Sketch.ThirdElement((255,255,255))], 1)[0], 'test')
     # Sketch.printer.close()
     # Sketch.SecondElement((255, 255, 255)).show()
-    Sketch.ThirdElement((255, 255, 255)).show()
+    # Sketch.ThirdElement((255, 255, 255)).show()
     # Sketch.FourthElement((255, 255, 255)).show()
     # Sketch.FifthElement((255, 255, 255)).show()
     # Sketch.SixthElement((255, 255, 255)).show()
