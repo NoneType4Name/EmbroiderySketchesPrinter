@@ -66,7 +66,7 @@ class SIZE(tuple):
     def __repr__(self):
         return f'{self.w}x{self.h}'
 
-
+ctypes.windll.user32.SetThreadDpiAwarenessContext(wintypes.HANDLE(-2))
 monitor_info = win32api.GetMonitorInfo(win32api.MonitorFromPoint((0,0)))
 FULL_SIZE = SIZE((monitor_info['Work'][2]-monitor_info['Work'][0], monitor_info['Work'][3]-monitor_info['Work'][1]-(win32api.GetSystemMetrics(33) + win32api.GetSystemMetrics(4) + win32api.GetSystemMetrics(92))))
 PANEL_SIZE = SIZE((win32api.GetSystemMetrics(0)-monitor_info['Work'][2]-monitor_info['Work'][0], win32api.GetSystemMetrics(1)-monitor_info['Work'][3]-monitor_info['Work'][1]))
@@ -257,6 +257,12 @@ class Printer:
             try:
                 self._pHD = win32print.OpenPrinter(printer_name, {"DesiredAccess": win32print.PRINTER_ALL_ACCESS})
                 self.properties = win32print.GetPrinter(self._pHD, 2)
+                # print(dir(self.properties['pDevMode']))
+                # for a in dir(self.properties['pDevMode']):
+                    # print(a, getattr(self.properties['pDevMode'], a))
+                self.properties['pDevMode'].PrintQuality = self.dpi
+                self.properties['pDevMode'].YResolution = self.dpi
+                self.ReInit()
             except pywintypes.error:
                 self._pHD = None
                 self.properties = None
@@ -267,10 +273,16 @@ class Printer:
             self.isLocal = False
             self.printable_area = FULL_SIZE
             self.printer_size = FULL_SIZE
-            try:
-                self.dpi = ctypes.windll.user32.GetDpiForWindow(pygame.display.get_wm_info()['window'])
-            except KeyError:
-                self.dpi = ctypes.windll.user32.GetDpiForSystem()
+            self._hDC = None
+            hDC = win32gui.GetDC(None)
+            width_mm = win32ui.GetDeviceCaps(hDC, win32con.HORZSIZE)
+            height_mm = win32ui.GetDeviceCaps(hDC, win32con.VERTSIZE)
+            width = win32api.GetSystemMetrics(0)
+            height = win32api.GetSystemMetrics(1)
+            self.dpi = math.ceil(((width**2+height**2)**0.5)/(((width_mm**2+height_mm**2)**0.5)/25.4))
+            # print(width, height)
+            # self.printable_area = self._hDC.GetDeviceCaps(HORZRES), self._hDC.GetDeviceCaps(VERTRES)
+            # self.dpi = win32ui.GetDeviceCaps(hDC, LOGPIXELSY)
         self.HORIZONTAL = True if self.printable_area[0] > self.printable_area[1] else False
         self.glue_padding = self.mmTOpx(GLUE_PADDING)
 
@@ -328,13 +340,13 @@ class Printer:
             return 0
         if not sketches:
             return all_images
-        font = ImageFont.truetype(FONT_PATH, int(self.mmTOpx(sketches_padding) / SKETCHES_FONT_K))
         w = self.printable_area[0] - self.glue_padding * 2
         images_h = []
         sketch_num = 0
         sketch = sketches[sketch_num]
         sketch_w = sketch.size[0]
         sketch_h = sketch.size[1]
+        font = ImageFont.truetype(FONT_PATH, int(self.mmTOpx(self.glue_padding)/self.mmTOpx(SKETCHES_FONT_K)))
         while sketch_num < len(sketches) - 1 or sketch_w > 0:
             while w > 0 and (sketch_num < len(sketches) - 1 or sketch_w > 0):
                 list_by_h = 0
@@ -348,7 +360,7 @@ class Printer:
                         d.text((0, 0), LANGUAGE.Sketch.LeftUp, fill=255, font=font)
 
                         t = LANGUAGE.Sketch.ListNum % str(len(all_images) + len(images_h))
-                        s = font.getsize(t)
+                        s = font.getbbox(t)[2:]
                         d.text((images_h[list_by_h].size[0] - s[0], images_h[list_by_h].size[1] - s[1]), t, fill=255,
                                font=font)
 
@@ -356,13 +368,13 @@ class Printer:
                             w=images_h[list_by_h].size[0], h=images_h[list_by_h].size[1],
                             d=self.dpi,
                             m=round(time.time() - start_time, 2))
-                        s = font.getsize(t)
+                        s = font.getbbox(t)[2:]
                         i_f = Image.new('L', s, 0)
                         ImageDraw.Draw(i_f).text((0, 0), t, fill=255, font=font)
                         i_f = i_f.rotate(90, expand=True)
                         images_h[list_by_h].paste(i_f, (0, images_h[list_by_h].size[1] // 2 - s[0] // 2), i_f)
 
-                        s = font.getsize(LANGUAGE.Sketch.Author)
+                        s = font.getbbox(LANGUAGE.Sketch.Author)[2:]
                         i_f = Image.new('L', s, 0)
                         ImageDraw.Draw(i_f).text((0, 0), LANGUAGE.Sketch.Author, fill=255, font=font)
                         i_f = i_f.rotate(270, expand=True)
@@ -372,12 +384,12 @@ class Printer:
                         if list_by_h:
                             t = LANGUAGE.Sketch.HeaderInfo % str(
                                 len(all_images) + len(images_h) - 1)
-                            s = font.getsize(t)
+                            s = font.getbbox(t)[2:]
                             d.text((images_h[list_by_h].size[0] // 2 - s[0] // 2, 0), t, fill=255, font=font)
                         if sketch_h - (self.printable_area[1] - self.glue_padding) > 0:
                             t = LANGUAGE.Sketch.FooterInfo % str(
                                 len(all_images) + len(images_h) + 1)
-                            s = font.getsize(t)
+                            s = font.getbbox(t)[2:]
                             d.text((images_h[list_by_h].size[0] // 2 - s[0] // 2, images_h[list_by_h].size[1] - s[1]),
                                    t,
                                    fill=255, font=font)
@@ -437,7 +449,7 @@ class Printer:
             90 if _image.size[0] > _image.size[1] and self.HORIZONTAL else 0, fillcolor=255)
         if self._hDC is not None:
             if task_name:
-                self._hDC.StartDoc()
+                self._hDC.StartDoc(task_name)
                 # win32print.StartDocPrinter(self._pHD, 1, (task_name, None, "xps_pass"))
             self._hDC.StartPage()
             # win32print.StartPagePrinter(self._pHD)
@@ -604,10 +616,10 @@ def GetLineLength(xy0, xy1):
 
 class DrawSketch:
     def __init__(self, OG, OT, ONK, VOG, VBU, VBD, Y, printer: Printer):
-        self.VOG = VOG + 10
         self.OG = OG
         self.OT = OT
         self.ONK = ONK
+        self.VOG = VOG+10
         self.VBU = VBU
         self.VBD = VBD
         self.Y = Y
@@ -672,7 +684,10 @@ class DrawSketch:
         image = Image.new('RGBA', (math.ceil(xy21[0][0]+self.sketch_lines_width), self.printer.mmTOpx(self.billetH+self.VOG+self.VBD+self.techno_padding*2)), bg)
         sketch = ImageDraw.Draw(image)
         sketch.line(points1, self.sketch_lines_color, self.printer.mmTOpx(self.sketch_lines_width))
+
         sketch.line(points11, self.sketch_lines_color, self.printer.mmTOpx(self.sketch_lines_width))
+        sketch.line((self.printer.mmTOpx(self.techno_padding, self.techno_padding+self.billetH),
+                     self.printer.mmTOpx(self.techno_padding+1000, self.techno_padding+self.billetH)), self.sketch_lines_color, self.printer.mmTOpx(self.sketch_lines_width))
         sketch.line(xy1, self.sketch_lines_color, self.printer.mmTOpx(self.sketch_lines_width))
         sketch.line(xy11, self.sketch_lines_color, self.printer.mmTOpx(self.sketch_lines_width))
         sketch.line(xy2, self.sketch_lines_color, self.printer.mmTOpx(self.sketch_lines_width))
@@ -785,7 +800,7 @@ class DrawSketch:
         points01 = (*points01, (points01[-1][0] + self.printer.mmTOpx(self.upper_padding / ((points01[-4][1] - points01[-1][1])/(points01[-1][0] - points01[-4][0]))), points01[-1][1] - self.printer.mmTOpx(self.upper_padding * ((((points01[-4][1] - points01[-1][1])/(points01[-1][0] - points01[-4][0]))*((((points01[-4][1] - points01[-1][1])/(points01[-1][0] - points01[-4][0]))**2+1)**0.5))/(((points01[-4][1] - points01[-1][1])/(points01[-1][0] - points01[-4][0]))**2+1)))))
         points01 = (*points01, (points01[-1][0]+self.printer.mmTOpx(5+self.techno_padding*2), points01[-1][1]))
 
-        _line_vbu = [self.printer.mmTOpx(self.techno_padding+(tg_normal*(self.VOG+self.VBD)-tg_Y*self.VBD)+(self.OG/2/2+5)/3, self.techno_padding+((self.upper_padding+self.billetH+self.VOG)-self.VBU)),
+        _line_vbu = [self.printer.mmTOpx(self.techno_padding+(tg_normal*(self.VOG+self.VBD)-tg_Y*self.VBD)+(self.OG/2/2+5)/3, ((self.techno_padding+self.upper_padding+self.billetH+self.VOG)-self.VBU)),
                      self.printer.mmTOpx(self.techno_padding+(tg_normal*(self.VOG+self.VBD)-tg_Y*self.VBD)+(self.OG/2/2+5)/3, self.techno_padding+self.upper_padding+self.billetH+self.VOG),
                      ]
         xy_points1 = list(map(lambda cord: (cord[0] * (self.printer.mmTOpx(300) / 300) + points0[-1][0], cord[1] * (self.printer.mmTOpx(70) / 70) + points0[-1][1]), ((0, 0), (165, 55), (300, 70))))
@@ -794,10 +809,10 @@ class DrawSketch:
                       (xy_points1[0][0]+self.printer.mmTOpx(300), (xy_points1[0][1]+(xy_points1[1][1]-xy_points1[0][1]))+self.printer.mmTOpx(70)))
         points1 = xy_points1[0], *make_bezier(xy_points1[1:])(self._ts)
 
-        _xy2 = (
-            self.printer.mmTOpx(self.techno_padding+(tg_normal*(self.VOG+self.VBD)-tg_Y*self.VBD)+(self.OG/2/2+5)/3-tg_mid*abs(self.VOG-self.VBU), self.techno_padding+((self.upper_padding+self.billetH+self.VOG)-self.VBU)),
-            self.printer.mmTOpx(self.techno_padding+(tg_normal*(self.VOG+self.VBD)-tg_Y*self.VBD)+(self.OG/2/2+5)/3, self.techno_padding+self.upper_padding+self.billetH))
-        common_point = min(GetCommonPoints(points1[:2], _xy2), key=lambda v: tuple(abs(numpy.array(v) - numpy.array(_xy2[0]))))
+        # _xy2 = (
+        #     self.printer.mmTOpx(self.techno_padding+(tg_normal*(self.VOG+self.VBD)-tg_Y*self.VBD)+(self.OG/2/2+5)/3-tg_mid*abs(self.VOG-self.VBU), self.techno_padding+((self.upper_padding+self.billetH+self.VOG)-self.VBU)),
+        #     self.printer.mmTOpx(self.techno_padding+(tg_normal*(self.VOG+self.VBD)-tg_Y*self.VBD)+(self.OG/2/2+5)/3, self.techno_padding+self.upper_padding+self.billetH))
+        common_point = min(GetCommonPoints(points1[:2], _line_vbu), key=lambda v: tuple(abs(numpy.array(v) - numpy.array(_line_vbu[0]))))
         xy2 = (
             (self.printer.mmTOpx(self.techno_padding+(tg_normal*(self.VOG+self.VBD)-tg_Y*self.VBD)+(self.OG/2/2+5)/3)*2-common_point[0], common_point[1]),
             self.printer.mmTOpx(self.techno_padding+(tg_normal*(self.VOG+self.VBD)-tg_Y*self.VBD)+(self.OG/2/2+5)/3,self.techno_padding+self.upper_padding+self.billetH),
@@ -821,12 +836,15 @@ class DrawSketch:
         xy4 = (points0[-1], xy2[0])
         xy41 = (points01[-1], xy21[0])
         waistline = (xy1[1], self.printer.mmTOpx(self.techno_padding+(tg_normal*(self.VOG+self.VBD)-tg_Y*self.VBD)+(self.OG/2/2+5)/3-tg_mid_with_pad*(self.VOG-self._mid_rise),self.techno_padding+self.upper_padding+self.billetH+(self.VOG-self._mid_rise)))
-        _line_vbu = xy_points1[1], _line_vbu[1]
+        # _line_vbu = xy_points1[1], _line_vbu[1]
         if min(xy21[0][1], points01[-1][1]) < 0:
             xy1, xy11, xy2, xy21, xy3, xy31, xy4, xy41, waistline, points0, points01 = tuple(tuple(map(lambda t: (t[0], t[1]+abs(min(xy21[0][1],points01[-1][1]))), v)) for v in (xy1, xy11, xy2, xy21, xy3, xy31, xy4, xy41, waistline, points0, points01))
         image = Image.new('RGBA', tuple(map(math.ceil, ((max((xy21[-1][0], xy21[0][0]))), xy21[-1][1]))), bg)
         sketch = ImageDraw.Draw(image)
+        sketch.line((self.printer.mmTOpx(self.techno_padding, self.techno_padding+self.upper_padding+self.billetH),
+                     self.printer.mmTOpx(self.techno_padding+1000, self.techno_padding+self.upper_padding+self.billetH)), self.sketch_lines_color, self.printer.mmTOpx(self.sketch_lines_width))
         sketch.line(points0, self.sketch_lines_color, self.printer.mmTOpx(self.sketch_lines_width))
+        sketch.line(_line_vbu, self.sketch_lines_color, self.printer.mmTOpx(self.sketch_lines_width))
         sketch.line(points01, self.sketch_lines_color, self.printer.mmTOpx(self.sketch_lines_width))
         sketch.line(xy1, self.sketch_lines_color, self.printer.mmTOpx(self.sketch_lines_width))
         sketch.line(xy11, self.sketch_lines_color, self.printer.mmTOpx(self.sketch_lines_width))
@@ -1072,12 +1090,17 @@ class DrawSketch:
                 self.printer.mmTOpx(self.sketch_lines_width))
         return image
 
-# if __name__ == '__main__':
-    # img = Image.new('RGBA', (150, 90), (255,255,255, 0))
-    # ImageDraw.Draw(img).line(make_bezier(((0, 18), (8, 95), (75, 109), (135, 95), (150, 0)))([i / 100 for i in range(101)]), (0, 0, 0), 1)
+if __name__ == '__main__':
     # img.save('test.png')
-    # Sketch = DrawSketch(OG=760, OT=640, ONK=850, VOG=120, VBU=220, VBD=120, Y=50, printer=Printer('monitorHDC'))
-    # Sketch.FirstElement((255,255,255, 0)).save('test.png')
+    Sketch = DrawSketch(OG=720, OT=680, ONK=800, VOG=85, VBU=160, VBD=100, Y=50, printer=Printer(DUMMY_MONITOR))
+    Sketch.printer.dpi = 243
+    # img = Image.new('RGBA', Sketch.printer.mmTOpx(150, 90), (255,255,255))
+    # ImageDraw.Draw(img).line((Sketch.printer.mmTOpx(0, 50), Sketch.printer.mmTOpx(119, 50)), (0, 0, 0), 2)
+    # img.show()
+    # Sketch.printer.newTask(img, 'test')
+    Sketch.FirstElement((255,255,255)).show()
+    # Sketch.printer.newTask(Sketch.printer.NewSketch([Sketch.ThirdElement((255,255,255))], 1)[0], 'test')
+    # Sketch.printer.close()
     # Sketch.SecondElement((255, 255, 255)).show()
     # Sketch.ThirdElement((255, 255, 255)).show()
     # Sketch.FourthElement((255, 255, 255)).show()
