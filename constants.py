@@ -52,7 +52,7 @@ TRANSLATE = {
         'FooterInfo': '← Место поклейки листа номер %s (поле должно быть скрыто)→',
         'LastInfo': 'Лист номер {} клеится справа от листа {}',
     },
-    'About': '{v}, {s}x{d}, dev: '+AUTHOR+', links:',
+    'About': '{m}% {v}, {s}x{d}, dev: '+AUTHOR+', links:',
     'Telegram': 'Telegram',
     'Github': 'GitHub ',
 
