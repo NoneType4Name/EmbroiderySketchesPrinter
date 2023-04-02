@@ -11,7 +11,7 @@ class SceneMain:
         self.notifications = pygame.sprite.Group()
         self.sketch = self._sketch = None
         self.sketch_pos = numpy.array((0, 0))
-        self.sketch_zoom = 0.4
+        self.sketch_zoom = 1
         self.updated_data = False
         self.monitor = Printer(DUMMY_MONITOR)
 
@@ -141,7 +141,7 @@ class SceneMain:
             if event.type == pygame.MOUSEMOTION:
                 if event.buttons[0]:
                     self.sketch_pos+=event.rel
-            elif event.type == pygame.MOUSEWHEEL and 0 < self.sketch_zoom + event.precise_y/10 <= 1:
+            elif event.type == pygame.MOUSEWHEEL and 0 < self.sketch_zoom + event.precise_y/10:
                 self.sketch_zoom = round(self.sketch_zoom + event.precise_y / 10, 1)
                 self.UpdateZoom()
         return self.image
