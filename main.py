@@ -61,6 +61,7 @@ class Window:
         self.RUN = True
 
     def update(self):
+        # t = time.time()
         self.UpdateEvents()
         self.Scene.update()
         self.screen.blit(self.Scene.image, (0, 0))
@@ -69,8 +70,11 @@ class Window:
             pygame.mouse.set_visible(True)
         elif type(self.cursor) is bool:
             pygame.mouse.set_visible(self.cursor)
+        # print(time.time()-t)
         pygame.display.flip()
         self.clock.tick(self.FPS)
+        pygame.display.set_caption(f'{NAME} {round(self.clock.get_fps(), 4)}')
+        # print(self.clock.get_fps())
 
     def UpdateEvents(self):
         self.mouse_left_release = False

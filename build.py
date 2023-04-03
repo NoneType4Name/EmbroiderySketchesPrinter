@@ -1,6 +1,4 @@
 import os
-import sys
-
 import constants
 
 DIR_NAME = (os.path.split(__file__)[0])

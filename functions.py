@@ -164,6 +164,8 @@ def GetUpdate(self, status, button):
     status.text_color_active = COLORS.label.UpdateStatus.check.textActive
     status.border_color = COLORS.label.UpdateStatus.check.border
     status.border_color_active = COLORS.label.UpdateStatus.check.borderActive
+    button.update()
+    # status.update()
     while not self.NewVersion:
         try:
             version = BeautifulSoup(requests.get('https://github.com/NoneType4Name/EmbroiderySketchesPrinter/releases/latest/').text, "lxml").find('h1', {'data-view-component':"true", 'class':"d-inline mr-3"}).text
@@ -177,6 +179,8 @@ def GetUpdate(self, status, button):
                 status.text_color_active = COLORS.label.UpdateStatus.load.textActive
                 status.border_color = COLORS.label.UpdateStatus.load.border
                 status.border_color_active = COLORS.label.UpdateStatus.load.borderActive
+                button.update()
+                # status.update()
                 con = requests.get(
                     f'{GITHUB}/{AUTHOR}/{"".join(NAME.split(" "))}/releases/latest/download/{"".join(NAME.split(" "))}.exe', stream=True)
                 for chunk in con.iter_content(4096*2):
@@ -185,16 +189,16 @@ def GetUpdate(self, status, button):
 
                 status.value = LANGUAGE.Update.Available
                 button.value = LANGUAGE.Update.AvailableButton
-
                 status.color = COLORS.label.UpdateStatus.available.background
                 status.color_active = COLORS.label.UpdateStatus.available.backgroundActive
                 status.text_color = COLORS.label.UpdateStatus.available.text
                 status.text_color_active = COLORS.label.UpdateStatus.available.textActive
                 status.border_color = COLORS.label.UpdateStatus.available.border
                 status.border_color_active = COLORS.label.UpdateStatus.available.borderActive
+                button.update()
+                # status.update()
                 button.func = lambda s: threading.Thread(target=InstallUpdate, args=[self, status, button], daemon=True).start()
             else:
-                button.func = lambda s: threading.Thread(target=GetUpdate, args=[self, status, button], daemon=True).start()
                 status.value = LANGUAGE.Update.Actual
                 button.value = LANGUAGE.Update.ActualButton
                 status.color = COLORS.label.UpdateStatus.background
@@ -203,6 +207,9 @@ def GetUpdate(self, status, button):
                 status.text_color_active = COLORS.label.UpdateStatus.textActive
                 status.border_color = COLORS.label.UpdateStatus.border
                 status.border_color_active = COLORS.label.UpdateStatus.borderActive
+                button.update()
+                # status.update()
+                button.func = lambda s: threading.Thread(target=GetUpdate, args=[self, status, button], daemon=True).start()
         except requests.exceptions.ConnectionError:
             continue
 
@@ -220,6 +227,8 @@ def InstallUpdate(self, status, button):
         status.border_color_active = COLORS.label.UpdateStatus.install.borderActive
         status.value = LANGUAGE.Update.Open
         button.value = LANGUAGE.Update.OpenButton
+        button.update()
+        # status.update()
         button.func = lambda s: threading.Thread(target=OpenUpdate, args=[self, status, button], daemon=True).start()
 
 
@@ -232,8 +241,9 @@ def OpenUpdate(self, status, button):
     status.border_color_active = COLORS.label.UpdateStatus.open.borderActive
     status.value = LANGUAGE.Update.Launching
     button.value = LANGUAGE.Update.LaunchingButton
+    button.update()
+    # status.update()
     try:
-
         subprocess.Popen(self._name_exe)
         self.parent.RUN = False
     except OSError as e:
@@ -244,6 +254,8 @@ def OpenUpdate(self, status, button):
         status.border_color = COLORS.label.UpdateStatus.error.border
         status.border_color_active = COLORS.label.UpdateStatus.error.borderActive
         status.value = LANGUAGE.Update.LaunchingError.format(e.winerror)
+        button.update()
+        # status.update()
 
 class Printer:
     def __init__(self, printer_name: str):

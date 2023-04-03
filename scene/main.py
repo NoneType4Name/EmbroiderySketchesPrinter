@@ -9,16 +9,24 @@ class SceneMain:
         self.size = parent.size
         self.image = pygame.Surface(self.size, pygame.SRCALPHA)
         self.notifications = pygame.sprite.Group()
-        self.sketch = self._sketch = None
+        self.notifications_thread = threading.Thread()
+        self.sketch = self._sketch = self._sketch_zoomed = None
         self.sketch_pos = numpy.array((0, 0))
         self.sketch_zoom = 1
+        self.sketch_zoom_precise_y = 0
+        self.sketch_zoom_precise_y_t = 0
         self.updated_data = False
         self.monitor = Printer(DUMMY_MONITOR)
+        self.ruler_x = pygame.surface.Surface((self.monitor.mmTOpx(self.monitor.width_mm//10*10, 10)), pygame.SRCALPHA)
+        self.ruler_y = pygame.surface.Surface((self.monitor.mmTOpx(10, self.monitor.height_mm//10*10)), pygame.SRCALPHA)
+        threading.Thread(target=self._draw_ruler, daemon=True).start()
+        
 
         self.data_panel = GUI.DataPanel(
             self,
             (-(self.size.w * 0.2 + self.size.h * 0.8) * 0.003*8, self.size.h * 0.05, self.size.w * 0.2, self.size.h * 0.9), 0.2, (self.size.w * 0.2 + self.size.h * 0.8) * 0.003
         )
+        self.data_panel_thread = threading.Thread()
 
         self.print_button = GUI.Button(self,
                                        (self.size.w * 0.45, self.size.h * 0.7, self.size.w * 0.1, self.size.h * 0.05),
@@ -112,11 +120,23 @@ class SceneMain:
             func=lambda s: s
         )
         threading.Thread(target=GetUpdate, args=[self, self.UpdateStatusLabel, self.UpdateLabel], daemon=True).start()
+        self.AboutLabel.update()
+        self.GitLabel.update()
+        self.TgLabel.update()
         self.NewSketch()
 
+    def _draw_ruler(self):
+        # pygame.draw.line(self.ruler_x, (0, 0, 0), (0, 0))
+        for num in numpy.arange(0, self.monitor.width_mm//10+1, 0.5):
+            pygame.draw.line(self.ruler_x, (0, 0, 0), self.monitor.mmTOpx(num*10, 0), self.monitor.mmTOpx(num*10, 10 if int(num)==num else 7), self.monitor.mmTOpx(0.5 if int(num)==num else 0.2))
+            # self.ruler_x.blit(GUI.Font.render(self.value, pygame.Rect(0, 0, ), True, self.text_color))
+
     def update(self):
+        t = time.time()
         self.image.fill(COLORS.background)
-        self.image.blit(self.sketch, tuple(self.sketch_pos))
+        self.image.blit(self.sketch, (0, 0))
+        if self.sketch_zoom == 1:
+            self.image.blit(self.ruler_x, (0, 0))
         self.image.blit(self.print_button.image, self.print_button.rect.topleft)
         self.image.blit(self.AboutLabel.image, self.AboutLabel.rect.topleft)
         self.image.blit(self.GitLabel.image, self.GitLabel.rect.topleft)
@@ -130,26 +150,44 @@ class SceneMain:
         else:
             self.data_panel.update()
             self.print_button.update()
-            self.AboutLabel.update()
-            self.GitLabel.update()
-            self.TgLabel.update()
             self.UpdateStatusLabel.update()
-            self.UpdateLabel.update()
+            if self.UpdateLabel.isCollide():
+                self.UpdateLabel.update()
+            labels = set(map(lambda l: l if l.isCollide() else False, (self.GitLabel, self.TgLabel, self.UpdateLabel, self.UpdateStatusLabel)))
+            labels.remove(False)
+            tuple(map(lambda l: l.update(),labels))
+
             if self.updated_data:
                 threading.Thread(target=self.NewSketch, daemon=True).start()
-        for event in self.parent.events:
-            if event.type == pygame.MOUSEMOTION:
-                if event.buttons[0]:
-                    self.sketch_pos+=event.rel
-            elif event.type == pygame.MOUSEWHEEL and 0 < self.sketch_zoom + event.precise_y/10:
-                self.sketch_zoom = round(self.sketch_zoom + event.precise_y / 10, 1)
-                self.UpdateZoom()
+                self.updated_data = False
+            # if self.sketch_zoom_precise_y_t and time.time()-self.sketch_zoom_precise_y_t >= 3:
+                # self.sketch_zoom_precise_y_t = 0
+                # threading.Thread(target=self.UpdateZoom, daemon=True, args=[Image.LANCZOS]).start()
+            if any(map(lambda e: ((e.type == pygame.MOUSEMOTION and e.buttons[0]) or (e.type == pygame.MOUSEWHEEL and 0 < self.sketch_zoom + e.precise_y/10)), self.parent.events)) and ((not self.data_panel.isCollide()) if self.data_panel.open else True):
+                for event in self.parent.events:
+                    if event.type == pygame.MOUSEMOTION:
+                        if event.buttons[0]:
+                            self.sketch_pos+=event.rel
+                            self.SketchCrop()
+                    elif event.type == pygame.MOUSEWHEEL:
+                        if not self.sketch_zoom_precise_y_t:
+                            self.sketch_zoom_precise_y_t = time.time()
+                        elif 0 < self.sketch_zoom + event.precise_y/10:
+                            self.sketch_zoom_precise_y_t = time.time()
+                            # self.sketch_zoom_precise_y += event.precise_y
+                            self.sketch_zoom = round(self.sketch_zoom + event.precise_y / 10, 1)
+                        threading.Thread(target=self.UpdateZoom, daemon=True, args=[Image.NEAREST]).start()
         return self.image
     
-    def UpdateZoom(self):
-        resized = self._sketch.resize(tuple(map(math.ceil, numpy.array(self._sketch.size)*self.sketch_zoom)), Image.ANTIALIAS)
-        self.sketch = pygame.image.fromstring(resized.tobytes(), resized.size, resized.mode)
+    def UpdateZoom(self, mode):
+        self._sketch_zoomed = self._sketch.resize(tuple(map(math.ceil, numpy.array(self._sketch.size)*self.sketch_zoom)), mode)
         self.AboutLabel.value = LANGUAGE.About.format(m=round(self.sketch_zoom*100),v=self.parent.Version if self.parent.isEXE else f"Is't builded app", s=self.parent.size, d=self.monitor.dpi)
+        self.AboutLabel.update()
+        self.SketchCrop()
+    
+    def SketchCrop(self):
+        cropt = self._sketch_zoomed.crop((*-self.sketch_pos, *tuple(numpy.array(-self.sketch_pos)+(self.size))))
+        self.sketch = pygame.image.fromstring(cropt.tobytes(), cropt.size, cropt.mode)
 
 
     def NewSketch(self):
@@ -159,18 +197,19 @@ class SceneMain:
                 pad = self.monitor.mmTOpx(DEFAULT_SKETCHES_PADDING)
                 w = sum(map(lambda i: i.size[0], images)) + pad * len(images)
                 h = max(map(lambda i: i.size[1], images))
-                im = Image.new('RGBA', (w, h), (0, 0, 0, 0))
+                im = Image.new('RGBA', (w, h), (0, 0, 0, 100))
                 x = 0
                 for i in images:
                     im.paste(i, (x, h - i.size[1]))
                     x += i.size[0] + pad
                 self._sketch = im
                 self.sketch = pygame.image.fromstring(im.tobytes(), im.size, im.mode)
+                self.UpdateZoom(Image.NEAREST)
+                self.sketch_pos = numpy.array(self.size)/2 - numpy.array(self.sketch.get_size())/2
             else:
+                self.sketch_pos = (0, 0)
+                self.sketch_zoom = 1
                 self.sketch = pygame.surface.Surface(FULL_SIZE, pygame.SRCALPHA)
-            self.UpdateZoom()
-            self.sketch_pos = numpy.array(self.size)/2 - numpy.array(self.sketch.get_size())/2
-            self.updated_data = False
         except Exception:
             try:
                 self.data_panel.data = list(LANGUAGE.DefaultMetrics.values())
