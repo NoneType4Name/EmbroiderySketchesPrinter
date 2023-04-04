@@ -617,6 +617,7 @@ class TextInput(pygame.sprite.Sprite):
         self.max_len = max_len
 
         self.active = False
+        self._deactivate = False
         self.pos = len(self.value)
 
     def update(self, parent):
@@ -627,7 +628,7 @@ class TextInput(pygame.sprite.Sprite):
                                   pygame.Rect(*self.text_rect.topleft, self.text_rect.w - self.border_active * 2,
                                               self.text_rect.h - self.border_active * 2), True, self.text_color_active)
         size = font.get_size()
-        if self.active:
+        if self.active and not self._deactivate:
             if self.isCollide():
                 parent.cursor = pygame.SYSTEM_CURSOR_IBEAM
             self.image.blit(
@@ -658,6 +659,10 @@ class TextInput(pygame.sprite.Sprite):
         else:
             self.image.blit(font,
                             (self.rect.w * self.left_padding - size[0] * 0.5, self.rect.h * 0.5 - size[1] * 0.5))
+        if self._deactivate:
+            self.active = False
+            self._deactivate = False
+            return self.image
         if self.isCollide() and parent.mouse_left_release and not self.active:
             self.Activate()
         elif not self.isCollide() and parent.mouse_left_release and self.active:
@@ -749,6 +754,7 @@ class TextInput(pygame.sprite.Sprite):
 
     def Activate(self):
         self.active = True
+        self._deactivate = False
         self.pos = len(self.text)
         while not pygame.key.get_focused() or not pygame.key.get_repeat()[0]:
             pygame.key.start_text_input()
@@ -756,7 +762,8 @@ class TextInput(pygame.sprite.Sprite):
         self.func_activate(self)
 
     def Deactivate(self):
-        self.active = False
+        # self.active = False
+        self._deactivate = True
         pygame.key.set_repeat(0, 0)
         self.func_deactivate(self)
 
@@ -814,10 +821,10 @@ def IncludeExcludeElement(self):
     self.parent.parent.updated_data = True
     if type(self.name) is str:
         if self.value:
+            tuple(map(lambda i: setattr(i, 'value', True), self.parent.allowed_sketches_elements))
             self.parent.allowed_sketches = [*range(1, SKETCHES+1)]
-            tuple(setattr(i, 'value', True) for i in self.parent.allowed_sketches_elements)
         else:
-            tuple(setattr(i, 'value', False) for i in self.parent.allowed_sketches_elements)
+            tuple(map(lambda i: setattr(i, 'value', False), self.parent.allowed_sketches_elements))
             self.parent.allowed_sketches.clear()
     else:
         if self.value:
@@ -837,13 +844,15 @@ class DataPanel(pygame.sprite.Sprite):
         self.image = pygame.Surface((self.rect.w, self.rect.h), pygame.SRCALPHA)
         self.radius = radius
         self.border = border
+        self.background = RoundedRect((0, 0, self.rect.w * 0.95, self.rect.h), COLORS.DataPanel.background, self.radius, self.border,
+                            COLORS.DataPanel.border)
 
         self.open = True
         self.elements = pygame.sprite.Group()
         self.text_input_elements = pygame.sprite.Group()
         self.data = list(LANGUAGE.DefaultMetrics.values())
         self.input_text_active = 0
-        for n, name in enumerate(self.data, 1):
+        for n, value in enumerate(self.data, 1):
             l1 = Label(
                 self.parent,
                 (self.rect.w * 0.1, self.rect.h * 0.1 * n - 1, self.rect.w * 0.4, self.rect.h * 0.05),
@@ -863,7 +872,7 @@ class DataPanel(pygame.sprite.Sprite):
                 self,
                 (self.rect.w * 0.6, self.rect.h * 0.1 * n - 1, self.rect.w * 0.15, self.rect.h * 0.05),
                 (0, 0, self.rect.w * 0.15, self.rect.h * 0.05),
-                '', self.data[n-1], 0.5,
+                '', value, 0.5,
                 COLORS.DataPanel.textInput.background,
                 COLORS.DataPanel.textInput.backgroundActive,
                 COLORS.DataPanel.textInput.text,
@@ -902,6 +911,7 @@ class DataPanel(pygame.sprite.Sprite):
             )
             self.elements.add(l1, l2)
             self.text_input_elements.add(t)
+        self.text_input_elements.update(self.parent.parent)
 
         self.OCButton = Button(
             self.parent,
@@ -952,6 +962,7 @@ class DataPanel(pygame.sprite.Sprite):
                         func=lambda this: IncludeExcludeElement(this))
             self.allowed_sketches_elements.add(sw)
             self.elements.add(label)
+            self.elements.update()
 
     def update_texts(self):
         for n, s in enumerate(self.text_input_elements.sprites()):
@@ -962,25 +973,31 @@ class DataPanel(pygame.sprite.Sprite):
     def update(self):
         self.image = pygame.Surface((self.rect.w, self.rect.h), pygame.SRCALPHA)
         if self.open:
-            self.image.blit(
-                RoundedRect((0, 0, self.rect.w * 0.95, self.rect.h), COLORS.DataPanel.background, self.radius, self.border,
-                            COLORS.DataPanel.border), (0, 0))
-            self.elements.update()
-            self.text_input_elements.update(self.parent.parent)
+            texts = set(map(lambda e: e if e.isCollide() or e.active or e._deactivate else False, self.text_input_elements.sprites()))
+            texts.remove(False)
+            for element in texts:
+                element.update(self.parent.parent)
             self.allowed_sketches_elements.update(self.parent.parent)
+            self.image.blit(self.background, (0, 0))
             self.elements.draw(self.image)
             self.text_input_elements.draw(self.image)
             self.allowed_sketches_elements.draw(self.image)
+            # t = time.time()
             if any(map(lambda e: e.type == pygame.KEYDOWN and e.key == pygame.K_TAB, self.parent.parent.events)):
                 if self.text_input_elements.sprites()[self.input_text_active].active:
                     self.text_input_elements.sprites()[self.input_text_active].Deactivate()
                     self.text_input_elements.sprites()[self.input_text_active + 1 if len(self.text_input_elements.sprites()) > self.input_text_active + 1 else 0].Activate()
                 else:
                     self.text_input_elements.sprites()[0].Activate()
+            # print(time.time()-t)
+            
         if any(map(lambda e: e.type == pygame.KEYDOWN and e.key == pygame.K_ESCAPE, self.parent.parent.events)):
             self.OpenClose()
         self.OCButton.update()
         self.image.blit(self.OCButton.image, self.OCButton.rect.topleft)
+
+    def isCollide(self):
+        return self.rect.collidepoint(self.parent.parent.mouse_pos)
 
     def OpenClose(self):
         self.image = pygame.Surface((self.rect.w, self.rect.h), pygame.SRCALPHA)
