@@ -186,6 +186,8 @@ def GetListsCounts(self, printer: Printer):
             self.close_button.func(self)
     else:
         self.printer_label2.value = LANGUAGE.Print.PrinterIsNotPhysic
+    self.printer_label2.update()
+    
 
 
 def Print(self):
@@ -285,7 +287,7 @@ class PrintWindow(pygame.sprite.Sprite):
             1,
             func=lambda _: (setattr(self, '_printer_index', (self._printer_index + (
                 1 if self._printer_index + 1 <= len(self._printers) - 1 else -self._printer_index)))) or setattr(
-                self.printer_name_label, 'value', self._printers[self._printer_index]) or setattr(self, 'updated_printer', True),
+                self.printer_name_label, 'value', self._printers[self._printer_index]) or setattr(self, 'updated_printer', True) or not self.printer_name_label.update(),
             real_pos=numpy.array(self.rect.topleft) + numpy.array((self.rect.w * 0.8, self.rect.h * 0.3))
 
         )
@@ -309,7 +311,7 @@ class PrintWindow(pygame.sprite.Sprite):
             1,
             func=lambda _: (setattr(self, '_printer_index', (
                     self._printer_index - (1 if self._printer_index - 1 >= 0 else -(len(self._printers) - 1))))) or setattr(
-                self.printer_name_label, 'value', self._printers[self._printer_index]) or setattr(self, 'updated_printer', True),
+                self.printer_name_label, 'value', self._printers[self._printer_index]) or setattr(self, 'updated_printer', True) or not self.printer_name_label.update(),
             real_pos=numpy.array(self.rect.topleft) + numpy.array((self.rect.w * 0.9, self.rect.h * 0.3)))
 
         self.colored_label = Label(
@@ -339,7 +341,9 @@ class PrintWindow(pygame.sprite.Sprite):
             or setattr(self.monochrome_label, 'text_color', COLORS.PrintWindow.label.textOn if s.value else COLORS.PrintWindow.label.textOff)
             or setattr(self.monochrome_label, 'text_color_active', COLORS.PrintWindow.label.textOnActive if s.value else COLORS.PrintWindow.label.textOffActive)
             or setattr(self.colored_label, 'text_color', COLORS.PrintWindow.label.textOff if s.value else COLORS.PrintWindow.label.textOn)
-            or setattr(self.colored_label, 'text_color_active', COLORS.PrintWindow.label.textOffActive if s.value else COLORS.PrintWindow.label.textOnActive),
+            or setattr(self.colored_label, 'text_color_active', COLORS.PrintWindow.label.textOffActive if s.value else COLORS.PrintWindow.label.textOnActive)
+            or not self.monochrome_label.update()
+            or not self.colored_label.update(),
             real_pos=numpy.array(self.rect.topleft) + numpy.array((self.colored_label.rect.topright[0]+self.rect.w*0.05, self.colored_label.rect.y))
         )
         self.monochrome_label = Label(
@@ -434,39 +438,65 @@ class PrintWindow(pygame.sprite.Sprite):
             real_pos=numpy.array(self.rect.topleft) + numpy.array((self.rect.w * 0.75, self.rect.h * 0.8)))
 
         self._drag = False
-        self.elements.add(self.printer_name_label, self.printer_label, self.printer_label2)
-        self.selectable_elements = pygame.sprite.Group(self.close_button, self.printer_name_select_down,
-                                                       self.printer_name_select_up, self.cancelButton, self.printButton)
+        self._desription_font = Font.render(self.description, pygame.Rect(0, 0, self.rect.w * 0.9, self.rect.h * 0.05), True, COLORS.PrintWindow.description)
+        self.printer_label.update()
+        self.printer_name_label.update()
+        self.settingsButton.update()
+        self.close_button.update()
+        self.printer_name_select_down.update()
+        self.printer_name_select_up.update()
+        self.cancelButton.update()
+        self.printButton.update()
+        self.colored_label.update()
+        self.monochrome_label.update()
+        self.monochrome.update(self.parent.parent)
 
     def update(self):
+        t = time.time()
         self.image.blit(RoundedRect(self.rect, COLORS.PrintWindow.background, self.radius, self.border, COLORS.PrintWindow.border), (0, 0))
         self.image.blit(RoundedRect((0, 0, self.rect.w, self.rect.h * 0.1), COLORS.PrintWindow.descriptionBackground, self.radius),
                         (0, 0))
-        font = Font.render(self.description, pygame.Rect(0, 0, self.rect.w * 0.9, self.rect.h * 0.05), True, COLORS.PrintWindow.description)
-        self.image.blit(font, (
-            self.rect.w * 0.5 - font.get_size()[0] * 0.5, self.rect.h * 0.1 * 0.5 - font.get_size()[1] * 0.5))
-        self.elements.update()
-        self.selectable_elements.update()
+        self.image.blit(self._desription_font, (
+            self.rect.w * 0.5 - self._desription_font.get_size()[0] * 0.5, self.rect.h * 0.1 * 0.5 - self._desription_font.get_size()[1] * 0.5))
         if self._printer.isLocal:
-            self.monochrome_label.update()
-            self.colored_label.update()
-            self.monochrome.update(self.parent.parent)
-            self.settingsButton.update()
+            if self.monochrome.isCollide():
+                self.monochrome.update(self.parent.parent)
+            if self.settingsButton.isCollide() or self.settingsButton.collide:
+                self.settingsButton.update()
+        if self.close_button.isCollide() or self.close_button.collide:
+            self.close_button.update()
+        elif self.printer_name_select_down.isCollide() or self.printer_name_select_down.collide:
+            self.printer_name_select_down.update()
+        elif self.printer_name_select_up.isCollide() or self.printer_name_select_up.collide:
+            self.printer_name_select_up.update()
+        elif self.cancelButton.isCollide() or self.cancelButton.collide:
+            self.cancelButton.update()
+        elif self.printButton.isCollide() or self.printButton.collide:
+            self.printButton.update()
+
         if self.updated_printer:
             self.updated_printer = False
             self.printer_label2.value = LANGUAGE.Print.BuildSketches
+            self.printer_label2.update()
             self._printer.close()
             self._printer = Printer(self._printers[self._printer_index])
             threading.Thread(target=GetListsCounts, args=[self, self._printer], daemon=True).start()
-        if self.selected_item_num is not None:
-            self.selectable_elements.sprites()[self.selected_item_num].collide = True
-        self.elements.draw(self.image)
+        # if self.selected_item_num is not None:
+        #     self.selectable_elements.sprites()[self.selected_item_num].collide = True
         if self._printer.isLocal:
             self.image.blit(self.monochrome_label.image, self.monochrome_label.rect.topleft)
             self.image.blit(self.colored_label.image, self.colored_label.rect.topleft)
             self.image.blit(self.monochrome.image, self.monochrome.rect.topleft)
             self.image.blit(self.settingsButton.image, self.settingsButton.rect.topleft)
-        self.selectable_elements.draw(self.image)
+        self.image.blit(self.printer_label.image, self.printer_label.rect.topleft)
+        self.image.blit(self.printer_name_label.image, self.printer_name_label.rect.topleft)
+        self.image.blit(self.printer_label2.image, self.printer_label2.rect.topleft)
+        self.image.blit(self.close_button.image, self.close_button.rect.topleft)
+        self.image.blit(self.printer_name_select_down.image, self.printer_name_select_down.rect.topleft)
+        self.image.blit(self.printer_name_select_up.image, self.printer_name_select_up.rect.topleft)
+        self.image.blit(self.cancelButton.image, self.cancelButton.rect.topleft)
+        self.image.blit(self.printButton.image, self.printButton.rect.topleft)
+        # print(time.time()-t)
         for event in self.parent.parent.events:
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_ESCAPE:
@@ -505,12 +535,10 @@ class PrintWindow(pygame.sprite.Sprite):
                         self.rect.y += event.rel[1]
                     else:
                         eve_rel[1] = 0
-                    tuple(s.RectEdit(*eve_rel, real=True) for s in
-                          self.selectable_elements.sprites() + self.elements.sprites() + ([self.monochrome, self.settingsButton] if self._printer.isLocal else []))
+                    tuple(s.RectEdit(*eve_rel, real=True) for s in [self.monochrome_label, self.colored_label, self.monochrome, self.settingsButton, self.printer_label, self.printer_name_label, self.printer_label2, self.close_button, self.printer_name_select_down, self.printer_name_select_up, self.cancelButton, self.printButton])
             elif event.type == pygame.WINDOWLEAVE:
                 if self._drag:
                     self._drag = False
-
         return self.image
 
     def Close(self):

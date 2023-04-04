@@ -2,7 +2,7 @@ import os
 import constants
 
 DIR_NAME = (os.path.split(__file__)[0])
-VERSION = '0.0.2.1'
+VERSION = '0.0.3.1'
 
 
 spec = r'''# -*- mode: python ; coding: utf-8 -*-

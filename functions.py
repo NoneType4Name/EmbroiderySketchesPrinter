@@ -444,12 +444,16 @@ class Printer:
         return all_images
 
     def PrintAll(self, images, task_group_name: str):
-        self._hDC.StartDoc(task_group_name)
-        # win32print.StartDocPrinter(self._pHD, 1, (task_group_name, None, "xps_pass"))
-        for im in images:
-            self.newTask(im)
-        self._hDC.EndDoc()
-        # win32print.EndDocPrinter(self._pHD)
+        try:
+            self._hDC.StartDoc(task_group_name)
+            # win32print.StartDocPrinter(self._pHD, 1, (task_group_name, None, "xps_pass"))
+            for im in images:
+                self.newTask(im)
+            self._hDC.EndDoc()
+            # win32print.EndDocPrinter(self._pHD)
+        except win32ui.error as e:
+            if self.isLocal:
+                raise e
 
     def newTask(self, image, task_name: str = None):
         if type(image) is str:
