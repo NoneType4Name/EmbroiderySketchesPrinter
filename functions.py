@@ -292,10 +292,10 @@ class Printer:
             self.height_mm = win32ui.GetDeviceCaps(hDC, win32con.VERTSIZE)
             self.width = win32api.GetSystemMetrics(0)
             self.height = win32api.GetSystemMetrics(1)
-            self.dpi = math.ceil(((self.width**2+self.height**2)**0.5)/(((self.width_mm**2+self.height_mm**2)**0.5)/25.4))
+            self.dpi = ((self.width**2+self.height**2)**0.5)/(((self.width_mm**2+self.height_mm**2)**0.5)/25.4)
+            # self.dpi = win32ui.GetDeviceCaps(hDC, LOGPIXELSX)
             # print(width, height)
             # self.printable_area = self._hDC.GetDeviceCaps(HORZRES), self._hDC.GetDeviceCaps(VERTRES)
-            # self.dpi = win32ui.GetDeviceCaps(hDC, LOGPIXELSY)
         self.HORIZONTAL = True if self.printable_area[0] > self.printable_area[1] else False
         self.glue_padding = self.mmTOpx(GLUE_PADDING)
 
@@ -1008,7 +1008,6 @@ class DrawSketch:
 
         image = Image.new('RGBA', self.printer.mmTOpx(self.techno_padding*2+(self.ONK-self.OG)/2/3/2+(self.OG/2/2-5)/2, self.techno_padding*2+self.upper_padding+self.billetH+self.VOG+self.VBD), bg)
         sketch = ImageDraw.Draw(image)
-        sketch.line(points1, self.sketch_lines_color, self.printer.mmTOpx(self.sketch_lines_width))
         sketch.line(xy1, self.sketch_lines_color, self.printer.mmTOpx(self.sketch_lines_width))
         sketch.line(xy11, self.sketch_lines_color, self.printer.mmTOpx(self.sketch_lines_width))
         sketch.line(xy2, self.sketch_lines_color, self.printer.mmTOpx(self.sketch_lines_width))
@@ -1072,7 +1071,6 @@ class DrawSketch:
         xy4 = xy1[-1], xy2[-1]
         xy41 = xy11[-1], xy21[-1]
 
-        sketch.line(points1, self.sketch_lines_color, self.printer.mmTOpx(self.sketch_lines_width))
         sketch.line(xy1, self.sketch_lines_color, self.printer.mmTOpx(self.sketch_lines_width))
         sketch.line(xy11, self.sketch_lines_color, self.printer.mmTOpx(self.sketch_lines_width))
         sketch.line(xy2, self.sketch_lines_color, self.printer.mmTOpx(self.sketch_lines_width))
