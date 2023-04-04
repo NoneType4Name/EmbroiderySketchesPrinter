@@ -76,7 +76,7 @@ class SceneMain:
             COLORS.label.Git.textActive,
             COLORS.label.Git.border,
             COLORS.label.Git.borderActive,
-            func=lambda s: webbrowser.open_new_tab(f'{GITHUB}/{AUTHOR}/{"".join(NAME.replace(" ", ""))}')
+            func=lambda s: webbrowser.open_new(f'{GITHUB}/{AUTHOR}/{"".join(NAME.replace(" ", ""))}')
         )
         self.TgLabel = GUI.Label(
             self,
@@ -90,7 +90,7 @@ class SceneMain:
             COLORS.label.Tg.textActive,
             COLORS.label.Tg.border,
             COLORS.label.Tg.borderActive,
-            func=lambda s: webbrowser.open_new_tab(TELEGRAM)
+            func=lambda s: webbrowser.open_new(TELEGRAM)
         )
         self.UpdateStatusLabel = GUI.Label(
             self,
