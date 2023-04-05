@@ -376,6 +376,7 @@ class PrintWindow(pygame.sprite.Sprite):
             COLORS.PrintWindow.label.borderActive,
             real_pos=numpy.array(self.rect.topleft) + numpy.array((self.rect.w * 0.1, self.rect.h * 0.65))
         )
+        self.printer_label2.update()
         threading.Thread(target=GetListsCounts, args=[self, self._printer], daemon=True).start()
 
         self.settingsButton = Button(
@@ -452,7 +453,6 @@ class PrintWindow(pygame.sprite.Sprite):
         self.monochrome.update(self.parent.parent)
 
     def update(self):
-        t = time.time()
         self.image.blit(RoundedRect(self.rect, COLORS.PrintWindow.background, self.radius, self.border, COLORS.PrintWindow.border), (0, 0))
         self.image.blit(RoundedRect((0, 0, self.rect.w, self.rect.h * 0.1), COLORS.PrintWindow.descriptionBackground, self.radius),
                         (0, 0))
@@ -496,7 +496,6 @@ class PrintWindow(pygame.sprite.Sprite):
         self.image.blit(self.printer_name_select_up.image, self.printer_name_select_up.rect.topleft)
         self.image.blit(self.cancelButton.image, self.cancelButton.rect.topleft)
         self.image.blit(self.printButton.image, self.printButton.rect.topleft)
-        # print(time.time()-t)
         for event in self.parent.parent.events:
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_ESCAPE:
@@ -1010,14 +1009,12 @@ class DataPanel(pygame.sprite.Sprite):
             self.elements.draw(self.image)
             self.text_input_elements.draw(self.image)
             self.allowed_sketches_elements.draw(self.image)
-            # t = time.time()
             if any(map(lambda e: e.type == pygame.KEYDOWN and e.key == pygame.K_TAB, self.parent.parent.events)):
                 if self.text_input_elements.sprites()[self.input_text_active].active:
                     self.text_input_elements.sprites()[self.input_text_active].Deactivate()
                     self.text_input_elements.sprites()[self.input_text_active + 1 if len(self.text_input_elements.sprites()) > self.input_text_active + 1 else 0].Activate()
                 else:
                     self.text_input_elements.sprites()[0].Activate()
-            # print(time.time()-t)
             
         if any(map(lambda e: e.type == pygame.KEYDOWN and e.key == pygame.K_ESCAPE, self.parent.parent.events)):
             self.OpenClose()

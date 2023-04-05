@@ -823,9 +823,6 @@ class DrawSketch:
                       (xy_points1[0][0]+self.printer.mmTOpx(300), (xy_points1[0][1]+(xy_points1[1][1]-xy_points1[0][1]))+self.printer.mmTOpx(70)))
         points1 = xy_points1[0], *make_bezier(xy_points1[1:])(self._ts)
 
-        # _xy2 = (
-        #     self.printer.mmTOpx(self.techno_padding+(tg_normal*(self.VOG+self.VBD)-tg_Y*self.VBD)+(self.OG/2/2+5)/3-tg_mid*abs(self.VOG-self.VBU), self.techno_padding+((self.upper_padding+self.billetH+self.VOG)-self.VBU)),
-        #     self.printer.mmTOpx(self.techno_padding+(tg_normal*(self.VOG+self.VBD)-tg_Y*self.VBD)+(self.OG/2/2+5)/3, self.techno_padding+self.upper_padding+self.billetH))
         common_point = min(GetCommonPoints(points1[:2], _line_vbu), key=lambda v: tuple(abs(numpy.array(v) - numpy.array(_line_vbu[0]))))
         xy2 = (
             (self.printer.mmTOpx(self.techno_padding+(tg_normal*(self.VOG+self.VBD)-tg_Y*self.VBD)+(self.OG/2/2+5)/3)*2-common_point[0], common_point[1]),
@@ -877,15 +874,11 @@ class DrawSketch:
         return image
 
     def FourthElement(self, bg=(0, 0, 0, 0)):
-        tg_Y = self.printer.mmTOpx(((self.OG-(self.OT-self.Y))/2/3/2))/self.printer.mmTOpx(self.VOG)
+        tg_Y = self.printer.mmTOpx(((self.OG-(self.OT-self.Y))/2/3/2/2))/self.printer.mmTOpx(self.VOG)
         tg_mid = self.printer.mmTOpx((self.OG-(self.OT-self.Y))/2/3/2)/self.printer.mmTOpx(self.VOG-self._mid_rise)
         tg_mid_with_pad = self.printer.mmTOpx((self.OG-(self.OT-self.Y))/2/3/2+self._mid_pad)/self.printer.mmTOpx(self.VOG-self._mid_rise)
-
-        x, y = self.printer.mmTOpx((-(self.OG/2/2+5))+((self.ONK-self.OG)/2/3)+10+self.techno_padding, self.techno_padding+self.upper_padding)
-        points_from_1st_element = make_bezier(tuple(map(lambda cord:
-        (cord[0] * (self.printer.mmTOpx(self.billetW) / self.billetW) + x,
-         cord[1] * (self.printer.mmTOpx(self.billetH) / self.billetH) + y),
-        ((0, 12), (5, 65), (50, 75), (90, 65), (100, 0)))))(self._ts)
+        x, y = self.printer.mmTOpx((-((self.OG/2/2+5)))+((self.ONK-self.OG)/2/3)+10+self.techno_padding), self.printer.mmTOpx(self.techno_padding+self.upper_padding)
+        points_from_1st_element = self.CreateFirstElementCurve((x, y))
         points_from_1st_element = (*points_from_1st_element, (points_from_1st_element[-1][0] + self.printer.mmTOpx(self.upper_padding / ((points_from_1st_element[-4][1] - points_from_1st_element[-1][1])/(points_from_1st_element[-1][0] - points_from_1st_element[-4][0]))), points_from_1st_element[-1][1] - self.printer.mmTOpx(self.upper_padding * ((((points_from_1st_element[-4][1] - points_from_1st_element[-1][1])/(points_from_1st_element[-1][0] - points_from_1st_element[-4][0]))*((((points_from_1st_element[-4][1] - points_from_1st_element[-1][1])/(points_from_1st_element[-1][0] - points_from_1st_element[-4][0]))**2+1)**0.5))/(((points_from_1st_element[-4][1] - points_from_1st_element[-1][1])/(points_from_1st_element[-1][0] - points_from_1st_element[-4][0]))**2+1)))))
         points_from_1st_element = (*points_from_1st_element, (points_from_1st_element[-1][0] + self.printer.mmTOpx(5), points_from_1st_element[-1][1]))
         _line_vbu = (self.printer.mmTOpx(self.techno_padding+(self.ONK-self.OG)/2/3, self.techno_padding+((self.upper_padding+self.billetH+self.VOG)-self.VBU)),
@@ -894,8 +887,8 @@ class DrawSketch:
         xy_points1.insert(1, min(GetCommonPoints(make_bezier(xy_points1)(self._ts), _line_vbu), key=lambda v: tuple(abs(numpy.array(v) - numpy.array(_line_vbu[0])))))
 
         points0 = xy_points1[0], *make_bezier((_line_vbu[0],
-                    (xy_points1[0][0]+self.printer.mmTOpx(165), (xy_points1[0][1]+(xy_points1[1][1]-xy_points1[0][1]))+self.printer.mmTOpx(55)),
-                    (xy_points1[0][0]+self.printer.mmTOpx(300), (xy_points1[0][1]+(xy_points1[1][1]-xy_points1[0][1]))+self.printer.mmTOpx(70))))(self._ts)
+                    (xy_points1[0][0]+self.printer.mmTOpx(165), _line_vbu[0][1]+self.printer.mmTOpx(55)),
+                    (xy_points1[0][0]+self.printer.mmTOpx(300), _line_vbu[0][1]+self.printer.mmTOpx(70))))(self._ts)
 
         xy_points1 = list(map(lambda cord: (cord[0] * (self.printer.mmTOpx(300) / 300) + (points_from_1st_element[-1][0]-self.printer.mmTOpx(self.techno_padding)), cord[1] * (self.printer.mmTOpx(70) / 70) + (points_from_1st_element[-1][1]-self.printer.mmTOpx(self.techno_padding))), ((0, 0), (165, 55), (300, 70))))
         xy_points1.insert(1, min(GetCommonPoints(make_bezier(xy_points1)(self._ts), _line_vbu), key=lambda v: tuple(abs(numpy.array(v) - numpy.array(_line_vbu[0])))))
@@ -910,7 +903,7 @@ class DrawSketch:
                self.printer.mmTOpx((self.techno_padding+(self.ONK-self.OG)/2/3+tg_mid*self.VOG-self._radius+self.techno_padding)/2, (self.techno_padding+self.upper_padding+self.billetH+self.VOG-self._radius+self.techno_padding+self.upper_padding+self.billetH+self.VOG+self.VBD)/2),
                self.printer.mmTOpx(self.techno_padding, self.techno_padding+self.upper_padding+self.billetH+self.VOG+self.VBD),
                )
-        common_points0 = GetCommonPoints(points0[2:], xy1[:2])
+        common_points0 = GetCommonPoints(points0[1:], xy1[:2])
 
         xy1 = (min(common_points0, key=lambda v: tuple(abs(numpy.array(v) - numpy.array(xy1[0])))), *xy1[1:])
         xy1 = (*xy1[:2], *make_bezier(xy1[2:])(self._ts))
@@ -967,11 +960,8 @@ class DrawSketch:
     def FifthElement(self, bg=(0, 0, 0, 0)):
         tg_Y = self.printer.mmTOpx(((self.OG-(self.OT-self.Y))/2/3/2/2))/self.printer.mmTOpx(self.VOG)
 
-        x, y = self.printer.mmTOpx(-((self.OG/2/2+5)+(self.OG/2/2-5)/2+(self.ONK-self.OG)/2/3/2)+10+self.techno_padding, self.techno_padding+self.upper_padding)
-        points_from_1st_element = make_bezier(tuple(map(lambda cord:
-        (cord[0] * (self.printer.mmTOpx(self.billetW) / self.billetW) + x, 
-         cord[1] * (self.printer.mmTOpx(self.billetH) / self.billetH) + y),
-         ((0, 12), (5, 65), (50, 75), (90, 65), (100, 0)))))(self._ts)
+        x, y = self.printer.mmTOpx(-((self.OG/2/2+5)+(self.OG/2/2-5)/2)+(self.ONK-self.OG)/2/3/2+self.techno_padding, self.techno_padding+self.upper_padding)
+        points_from_1st_element = self.CreateFirstElementCurve((x, y))
         points_from_1st_element = (*points_from_1st_element, (points_from_1st_element[-1][0] + self.printer.mmTOpx(self.upper_padding / ((points_from_1st_element[-4][1] - points_from_1st_element[-1][1])/(points_from_1st_element[-1][0] - points_from_1st_element[-4][0]))), points_from_1st_element[-1][1] - self.printer.mmTOpx(self.upper_padding * ((((points_from_1st_element[-4][1] - points_from_1st_element[-1][1])/(points_from_1st_element[-1][0] - points_from_1st_element[-4][0]))*((((points_from_1st_element[-4][1] - points_from_1st_element[-1][1])/(points_from_1st_element[-1][0] - points_from_1st_element[-4][0]))**2+1)**0.5))/(((points_from_1st_element[-4][1] - points_from_1st_element[-1][1])/(points_from_1st_element[-1][0] - points_from_1st_element[-4][0]))**2+1)))))
         points_from_1st_element = (*points_from_1st_element, (points_from_1st_element[-1][0] + self.printer.mmTOpx(5), points_from_1st_element[-1][1]))
         _line_vbu = (self.printer.mmTOpx(-((self.OG/2/2-5)/2)+(self.ONK-self.OG)/2/3/2+self.techno_padding, ((self.techno_padding+self.upper_padding+self.billetH+self.VOG)-self.VBU)),
@@ -1037,11 +1027,8 @@ class DrawSketch:
             self.techno_padding * 2 + self.upper_padding + self.billetH + self.VOG + self.VBD)), bg)
         sketch = ImageDraw.Draw(image)
 
-        x, y = self.printer.mmTOpx(-((self.OG/2/2+5)+(self.OG/2/2-5)+(self.ONK-self.OG)/2/3/2)+10+self.techno_padding, self.techno_padding+self.upper_padding)
-        points_from_1st_element = make_bezier(tuple(map(lambda cord:
-        (cord[0] * (self.printer.mmTOpx(self.billetW) / self.billetW) + x,
-         cord[1] * (self.printer.mmTOpx(self.billetH) / self.billetH) + y),
-         ((0, 12), (5, 65), (50, 75), (90, 65), (100, 0)))))(self._ts)
+        x, y = self.printer.mmTOpx(-((self.OG/2/2+5)+(self.OG/2/2-5))+self.techno_padding, self.techno_padding+self.upper_padding)
+        points_from_1st_element = self.CreateFirstElementCurve((x, y))
         points_from_1st_element = (*points_from_1st_element, (points_from_1st_element[-1][0] + self.printer.mmTOpx(self.upper_padding / ((points_from_1st_element[-4][1] - points_from_1st_element[-1][1])/(points_from_1st_element[-1][0] - points_from_1st_element[-4][0]))), points_from_1st_element[-1][1] - self.printer.mmTOpx(self.upper_padding * ((((points_from_1st_element[-4][1] - points_from_1st_element[-1][1])/(points_from_1st_element[-1][0] - points_from_1st_element[-4][0]))*((((points_from_1st_element[-4][1] - points_from_1st_element[-1][1])/(points_from_1st_element[-1][0] - points_from_1st_element[-4][0]))**2+1)**0.5))/(((points_from_1st_element[-4][1] - points_from_1st_element[-1][1])/(points_from_1st_element[-1][0] - points_from_1st_element[-4][0]))**2+1)))))
         points_from_1st_element = (*points_from_1st_element, (points_from_1st_element[-1][0] + self.printer.mmTOpx(5), points_from_1st_element[-1][1]))
         _line_vbu = (self.printer.mmTOpx(-(self.OG/2/2-5)+self.techno_padding, ((self.techno_padding+self.upper_padding+self.billetH+self.VOG)-self.VBU)),
@@ -1100,18 +1087,19 @@ class DrawSketch:
         return image
 
 if __name__ == '__main__':
-    # img.save('test.png')
     Sketch = DrawSketch(OG=720, OT=680, ONK=800, VOG=85, VBU=160, VBD=100, Y=50, printer=Printer(DUMMY_MONITOR))
-    Sketch.printer.dpi = 243
-    # img = Image.new('RGBA', Sketch.printer.mmTOpx(150, 90), (255,255,255))
+    Sketch.techno_padding = 0
+    # curve = Sketch.CreateFirstElementCurve((0, Sketch.printer.mmTOpx(Sketch.upper_padding)))
+    # curve = (*curve, (curve[-1][0] + Sketch.printer.mmTOpx(Sketch.upper_padding / ((curve[-4][1] - curve[-1][1])/(curve[-1][0] - curve[-4][0]))), curve[-1][1] - Sketch.printer.mmTOpx(Sketch.upper_padding * ((((curve[-4][1] - curve[-1][1])/(curve[-1][0] - curve[-4][0]))*((((curve[-4][1] - curve[-1][1])/(curve[-1][0] - curve[-4][0]))**2+1)**0.5))/(((curve[-4][1] - curve[-1][1])/(curve[-1][0] - curve[-4][0]))**2+1)))))
+    # curve = (*curve, (curve[-1][0]+Sketch.printer.mmTOpx(5), curve[-1][1]))
+    # img = Image.new('RGBA', (math.ceil(curve[-1][0])+1, Sketch.printer.mmTOpx(Sketch.billetH+Sketch.upper_padding)), (255,255,255, 0))
+    # ImageDraw.Draw(img).line(curve, (0, 0, 0), Sketch.printer.mmTOpx(1))
     # ImageDraw.Draw(img).line((Sketch.printer.mmTOpx(0, 50), Sketch.printer.mmTOpx(119, 50)), (0, 0, 0), 2)
-    # img.show()
+    # img.save('test.png')
     # Sketch.printer.newTask(img, 'test')
     # Sketch.FirstElement((255,255,255)).show()
     # Sketch.printer.newTask(Sketch.printer.NewSketch([Sketch.ThirdElement((255,255,255))], 1)[0], 'test')
     # Sketch.printer.close()
-    # Sketch.SecondElement((255, 255, 255)).show()
-    Sketch.ThirdElement((255, 255, 255)).show()
-    # Sketch.FourthElement((255, 255, 255)).show()
+    Sketch.SecondElement((255, 255, 255)).show()
     # Sketch.FifthElement((255, 255, 255)).show()
     # Sketch.SixthElement((255, 255, 255)).show()
