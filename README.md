@@ -1,5 +1,5 @@
-<h1 align="center" style="color: rgb(100, 200, 200)">Embroidery Sketches Printer. </h1>
-<h2 align="center">Repository of automatic design system with graphical user interface.</h2>
+<h1 align="center" style="color: rgb(100, 200, 200)">Embroidery Sketches Printer</h1>
+<h2 align="center">Repository of automatic design system with graphical user interface</h2>
 <br>
 <h3>Start for</h3>
 <ul>
@@ -9,30 +9,30 @@
 <br>
 <h3 align="center" style="color: aquamarine">Start for User</h3>
 <ul>
-    <li><h5>Download latest <a href="https://github.com/NoneType4Name/EmbroiderySketchesPrinter/releases/latest/download/EmbroiderySketchesPrinter.exe" style="text-decoration: none; color: rgb(176, 255, 255);">version</a> of app</h5></li>
-    <li><h5>Launch App</h5></li>
-    <li><h5>Take Your measurements</h5></li>
-    <li><h5>Input Your measurements in App with graphical interface</h5></li>
-    <li><h5>Press Print button</h5></li>
-    <li><h5>Select Your printer and make sure it works</h5></li>
-    <li><h5>Send Your embroidery sketch to print</h5></li>
+    <li><h4>Download latest <a href="https://github.com/NoneType4Name/EmbroiderySketchesPrinter/releases/latest/download/EmbroiderySketchesPrinter.exe" style="text-decoration: none; color: rgb(176, 255, 255);">version</a> of app</h4></li>
+    <li><h4>Launch App</h4></li>
+    <li><h4>Take Your measurements</h4></li>
+    <li><h4>Input Your measurements in App with graphical interface</h4></li>
+    <li><h4>Press Print button</h4></li>
+    <li><h4>Select Your printer and make sure it works</h4></li>
+    <li><h4>Send Your embroidery sketch to print</h4></li>
 </ul>
 <br>
 <h3 align="center" style="color: aqua">Start for Developer</h3>
 <ul>
-    <li><h5>copy main branch to <i>folder.</i></h5></li>
-    <li><h5>run command console <code>py {folder}/init.py</code></h5></li>
-    <li>For code editing
+    <li><h4>copy main branch to <i>folder.</i></h4></li>
+    <li><h4>run command console <code>py {folder}/init.py</code></h4></li>
+    <li><h4>For code editing</h4>
         <ul>
-            <li><code>init.py</code> - for start App</li>
-            <li><code>main.py</code> - main loop App</li>
-            <li><code>scene/main.py</code> - main window class App</li>
-            <li><code>GUI.py</code> - all GUI elements for App</li>
-            <li><code>functions.py</code> - all functions of App (ex: work with winapi; get full screen without panel etc.)</li>
-            <li><code>constants.py</code> - all colors and language dicts for App</li>
-            <li><code>build.py</code> - for build App (py project -> exe)</li>
+            <li><h4><code>init.py</code> - for start App</h4></li>
+            <li><h4><code>main.py</code> - main loop App</h4></li>
+            <li><h4><code>scene/main.py</code> - main window class App</h4></li>
+            <li><h4><code>GUI.py</code> - all GUI elements for App</h4></li>
+            <li><h4><code>functions.py</code> - all functions of App (ex: work with winapi; get full screen without panel etc.)</h4></li>
+            <li><h4><code>constants.py</code> - all colors and language dicts for App</h4></li>
+            <li><h4><code>build.py</code> - for build App (py project -> exe)</h4></li>
             <ul>
-                <li>edit <code>VERSION</code> variable for edit version of app</li>
+                <li><h4>edit <code>VERSION</code> variable for edit version of app</h4></li>
             </ul>
         </ul>
     </li>
