@@ -3,11 +3,11 @@
 <br>
 <h3>Start for</h3>
 <ul>
-    <li><h4><a href=""style="text-decoration: none; color: aquamarine">User</a></h1></li>
-    <li><h4><a href="#Developer" style="text-decoration: none; color: aqua;">Developer</a></h1></li>
+    <li><h4><a href="#start-for-user"style="text-decoration: none; color: aquamarine">User</a></h1></li>
+    <li><h4><a href="#start-for-developer" style="text-decoration: none; color: aqua;">Developer</a></h1></li>
 </ul>
 <br>
-<h3 align="center", id="User" style="color: aquamarine">Start for User</h3>
+<h3 align="center" style="color: aquamarine">Start for User</h3>
 <ul>
     <li><h5>Download latest <a href="https://github.com/NoneType4Name/EmbroiderySketchesPrinter/releases/latest/download/EmbroiderySketchesPrinter.exe" style="text-decoration: none; color: rgb(176, 255, 255);">version</a> of app</h5></li>
     <li><h5>Launch App</h5></li>
@@ -18,7 +18,7 @@
     <li><h5>Send Your embroidery sketch to print</h5></li>
 </ul>
 <br>
-<h3 align="center", id="Developer" style="color: aqua">Start for Developer</h3>
+<h3 align="center" style="color: aqua">Start for Developer</h3>
 <ul>
     <li><h5>copy main branch to <i>folder.</i></h5></li>
     <li><h5>run command console <code>py {folder}/init.py</code></h5></li>
