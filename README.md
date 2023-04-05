@@ -1,4 +1,4 @@
-<h1 align="center" style="color: rgb(100, 200, 200)"><img src="https://raw.githubusercontent.com/NoneType4Name/EmbroiderySketchesPrinter/master/assets/ico.png">Embroidery Sketches Printer</h1>
+<h1 align="center" style="color: rgb(100, 200, 200)"><img src="https://raw.githubusercontent.com/NoneType4Name/EmbroiderySketchesPrinter/master/assets/ico.png"> Embroidery Sketches Printer</h1>
 <h2 align="center">Repository of automatic design system with graphical user interface</h2>
 <br>
 <h3>Start for</h3>
