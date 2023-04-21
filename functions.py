@@ -415,7 +415,7 @@ class Printer:
                         self.printable_area[1] - self.glue_padding * 2))
                     images_h[list_by_h].paste(i, ((self.printable_area[0] - self.glue_padding) - w, self.glue_padding),
                                               mask=i.split()[3])
-                    sketch_h = sketch_h - (self.printable_area[1] - self.glue_padding)
+                    sketch_h = sketch_h - (self.printable_area[1] - self.glue_padding * 2)
 
                     list_by_h += 1
                 sketch_w -= i.size[0] + (self.mmTOpx(sketches_padding) if not sketch_w - i.size[0] else 0)
